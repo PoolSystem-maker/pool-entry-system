@@ -11,8 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Trust Railway's reverse proxy so HTTPS works correctly
-        $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(at: '0.0.0.0/0');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
