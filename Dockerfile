@@ -9,9 +9,13 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
     nodejs \
     npm \
     && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 RUN docker-php-ext-install \
     pdo \
@@ -35,7 +39,6 @@ RUN npm run build
 
 RUN chmod -R 775 storage bootstrap/cache
 
-# Redirect PHP logs to stdout so Railway reads them correctly
 ENV PHP_CLI_SERVER_WORKERS=4
 RUN echo "error_log = /dev/stdout" > /usr/local/etc/php/conf.d/logging.ini
 RUN echo "log_errors = On" >> /usr/local/etc/php/conf.d/logging.ini

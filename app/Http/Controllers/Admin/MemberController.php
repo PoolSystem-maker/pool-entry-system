@@ -97,7 +97,7 @@ class MemberController extends Controller
             'no_telp'     => 'required|string|max:20',
             'unit'        => 'required|string|max:50',
             'kawasan'     => 'required|string|max:100',
-            'daily_limit' => 'required|integer|min:1|max:20',
+            'daily_limit' => 'required|integer|min:1|max:100',
             'is_active'   => 'boolean',
         ]);
 
@@ -204,12 +204,34 @@ class MemberController extends Controller
     {
         $qrCode = QrCode::format('png')
             ->size(300)
+            ->margin(2)
             ->generate($member->qr_token);
 
-        return response($qrCode, 200, [
+        return response()->stream(function () use ($qrCode) {
+            echo $qrCode;
+        }, 200, [
             'Content-Type'        => 'image/png',
-            'Content-Disposition' => "attachment; filename=\"qr-{$member->unit}.png\"",
+            'Content-Disposition' => 'attachment; filename="qr-' . $member->unit . '.png"',
+            'Content-Length'      => strlen($qrCode),
         ]);
+    }
+
+    // -------------------------------------------------------
+    // Print all member cards as a printable page
+    // -------------------------------------------------------
+    public function printAllCards()
+    {
+        $members = Member::orderBy('kawasan')->orderBy('nama')->get();
+
+        $qrCodes = $members->mapWithKeys(function ($member) {
+            return [
+                $member->id => QrCode::format('svg')
+                    ->size(150)
+                    ->generate($member->qr_token)
+            ];
+        });
+
+        return view('admin.members.print-all-cards', compact('members', 'qrCodes'));
     }
 
     // -------------------------------------------------------
@@ -222,7 +244,6 @@ class MemberController extends Controller
             'override_limit' => 'required|integer|min:1|max:100',
         ]);
 
-        // Use updateOrCreate so running it twice just updates
         \App\Models\DailyLimitOverride::updateOrCreate(
             [
                 'member_id' => $member->id,
@@ -236,21 +257,5 @@ class MemberController extends Controller
         return back()->with('success',
             "Batas akses hari ini untuk {$member->nama} diset ke {$request->override_limit}x."
         );
-    }
-
-    // -------------------------------------------------------
-    // Print all member cards as a printable page
-    // -------------------------------------------------------
-    public function printAllCards()
-    {
-        $members = Member::orderBy('kawasan')->orderBy('nama')->get();
-
-        $qrCodes = $members->mapWithKeys(function ($member) {
-            return [
-                $member->id => QrCode::format('svg')->size(150)->generate($member->qr_token)
-            ];
-        });
-
-        return view('admin.members.print-all-cards', compact('members', 'qrCodes'));
     }
 }
