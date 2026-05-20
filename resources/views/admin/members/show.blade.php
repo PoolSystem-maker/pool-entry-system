@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 340px; gap:16px;">
+<div class="show-grid">
 
     {{-- LEFT COLUMN --}}
     <div style="display:flex; flex-direction:column; gap:16px;">
@@ -97,8 +97,8 @@
             @endphp
 
             <div style="display:flex; justify-content:space-between;
-                align-items:center; margin-bottom:10px;">
-                <div style="display:flex; align-items:center; gap:8px;">
+                align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <span style="color:var(--text); font-size:14px;">
                         {{ $used }} dari {{ $limit }} akses digunakan
                     </span>
@@ -126,7 +126,8 @@
                 action="{{ route('admin.members.overrideLimit', $member) }}">
                 @csrf
                 <label>Set batas akses untuk hari ini saja</label>
-                <div style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+                <div style="display:flex; gap:10px; align-items:center;
+                    margin-top:6px; flex-wrap:wrap;">
                     <input type="number" name="override_limit" min="1" max="100"
                         value="{{ $limit }}"
                         style="width:100px;">
@@ -186,14 +187,16 @@
     </div>
 
     {{-- RIGHT COLUMN --}}
-    <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="show-right">
 
         {{-- QR Code --}}
-        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+        <div class="card" style="display:flex; flex-direction:column;
+            align-items:center; margin-bottom:16px;">
             <h2 style="font-size:15px; font-weight:700; color:var(--text);
                 margin-bottom:16px; align-self:flex-start;">QR Code</h2>
 
-            <div style="background:#fff; padding:16px; border-radius:12px;">
+            <div style="background:#fff; padding:16px; border-radius:12px;
+                max-width:220px; width:100%;">
                 {!! $qrCode !!}
             </div>
 
@@ -238,11 +241,21 @@
 
 </div>
 
-{{-- Mobile: stack columns --}}
 <style>
+    .show-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 16px;
+    }
+
     @media (max-width: 768px) {
         .show-grid {
             grid-template-columns: 1fr !important;
+        }
+
+        /* Show QR and scan history ABOVE member info on mobile */
+        .show-right {
+            order: -1;
         }
     }
 </style>
