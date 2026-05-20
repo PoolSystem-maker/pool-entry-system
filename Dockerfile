@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     nodejs \
-    npm
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
     pdo \
@@ -33,6 +34,11 @@ RUN npm install
 RUN npm run build
 
 RUN chmod -R 775 storage bootstrap/cache
+
+# Redirect PHP logs to stdout so Railway reads them correctly
+ENV PHP_CLI_SERVER_WORKERS=4
+RUN echo "error_log = /dev/stdout" > /usr/local/etc/php/conf.d/logging.ini
+RUN echo "log_errors = On" >> /usr/local/etc/php/conf.d/logging.ini
 
 EXPOSE 8080
 
