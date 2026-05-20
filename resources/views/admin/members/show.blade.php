@@ -196,7 +196,8 @@
                 margin-bottom:16px; align-self:flex-start;">QR Code</h2>
 
             <div style="background:#fff; padding:16px; border-radius:12px;
-                max-width:220px; width:100%;">
+                max-width:220px; width:100%; display:flex;
+                align-items:center; justify-content:center;">
                 {!! $qrCode !!}
             </div>
 

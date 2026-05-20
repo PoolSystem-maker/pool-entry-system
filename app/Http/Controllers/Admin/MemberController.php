@@ -198,21 +198,19 @@ class MemberController extends Controller
     }
 
     // -------------------------------------------------------
-    // Download the member's QR code as a PNG image
+    // Download the member's QR code as an SVG file
+    // SVG is scalable and prints at any size without blur
     // -------------------------------------------------------
     public function downloadQr(Member $member)
     {
-        $qrCode = QrCode::format('png')
+        $qrCode = QrCode::format('svg')
             ->size(300)
             ->margin(2)
             ->generate($member->qr_token);
 
-        return response()->stream(function () use ($qrCode) {
-            echo $qrCode;
-        }, 200, [
-            'Content-Type'        => 'image/png',
-            'Content-Disposition' => 'attachment; filename="qr-' . $member->unit . '.png"',
-            'Content-Length'      => strlen($qrCode),
+        return response($qrCode, 200, [
+            'Content-Type'        => 'image/svg+xml',
+            'Content-Disposition' => 'attachment; filename="qr-' . $member->unit . '.svg"',
         ]);
     }
 
