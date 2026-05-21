@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Models\Member;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 
@@ -13,54 +12,108 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
 {
     use SkipsErrors;
 
-    // Keep track of how many rows were imported and skipped
-    private int $importedCount  = 0;
-    private int $duplicateCount = 0;
+    private int   $importedCount = 0;
+    private int   $skippedCount  = 0;
+    private array $skippedRows   = [];
 
-    // -------------------------------------------------------
-    // This runs for every row in the Excel file
-    // The $row array keys match the Excel column headers
-    // Our expected headers: NO, NAMA PEMILIKI, NO KTP, NO-TELP, UNIT, KAWASAN
-    // WithHeadingRow converts them to snake_case automatically:
-    // no, nama_pemiliki, no_ktp, no_telp, unit, kawasan
-    // -------------------------------------------------------
+    // Track combinations imported in this file session
+    private array $importedUnits = [];
+    private array $importedNames = [];
+
     public function model(array $row)
     {
-        // Skip rows where no_ktp is empty
-        if (empty($row['no_ktp'])) {
+        // Skip completely empty rows
+        if (empty($row['nama_pemiliki']) && empty($row['unit'])) {
             return null;
         }
 
-        // Check for duplicate no_ktp
-        $exists = Member::where('no_ktp', $row['no_ktp'])->exists();
+        $nama    = trim((string) ($row['nama_pemiliki'] ?? ''));
+        $noKtp   = trim((string) ($row['no_ktp']        ?? ''));
+        $noTelp  = trim((string) ($row['no_telp']       ?? '-'));
+        $unit    = trim((string) ($row['unit']           ?? ''));
+        $kawasan = trim((string) ($row['kawasan']        ?? ''));
 
-        if ($exists) {
-            $this->duplicateCount++;
+        // Skip if required fields are empty
+        if (empty($nama) || empty($unit) || empty($kawasan)) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'nama'    => $nama ?: '-',
+                'no_ktp'  => $noKtp ?: '-',
+                'unit'    => $unit ?: '-',
+                'kawasan' => $kawasan ?: '-',
+                'reason'  => 'Kolom nama, unit, atau kawasan kosong',
+            ];
             return null;
         }
 
+        // Check duplicate nama in database
+        if (Member::where('nama', $nama)->exists()) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'nama'    => $nama,
+                'no_ktp'  => $noKtp,
+                'unit'    => $unit,
+                'kawasan' => $kawasan,
+                'reason'  => "Nama \"{$nama}\" sudah terdaftar di database",
+            ];
+            return null;
+        }
+
+        // Check duplicate nama within this import file
+        if (in_array(strtolower($nama), $this->importedNames)) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'nama'    => $nama,
+                'no_ktp'  => $noKtp,
+                'unit'    => $unit,
+                'kawasan' => $kawasan,
+                'reason'  => "Nama \"{$nama}\" duplikat dalam file Excel",
+            ];
+            return null;
+        }
+
+        // Check duplicate unit+kawasan combination in database
+        $unitKey = strtolower($unit . '|' . $kawasan);
+        if (Member::where('unit', $unit)->where('kawasan', $kawasan)->exists()) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'nama'    => $nama,
+                'no_ktp'  => $noKtp,
+                'unit'    => $unit,
+                'kawasan' => $kawasan,
+                'reason'  => "Unit {$unit} di kawasan {$kawasan} sudah terdaftar",
+            ];
+            return null;
+        }
+
+        // Check duplicate unit+kawasan within this import file
+        if (in_array($unitKey, $this->importedUnits)) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'nama'    => $nama,
+                'no_ktp'  => $noKtp,
+                'unit'    => $unit,
+                'kawasan' => $kawasan,
+                'reason'  => "Unit {$unit} di kawasan {$kawasan} duplikat dalam file Excel",
+            ];
+            return null;
+        }
+
+        // All checks passed — import this row
+        $this->importedUnits[] = $unitKey;
+        $this->importedNames[] = strtolower($nama);
         $this->importedCount++;
 
-        // qr_token is auto-generated in the Member model boot() method
         return new Member([
-            'nama'    => $row['nama_pemiliki'],
-            'no_ktp'  => $row['no_ktp'],
-            'no_telp' => $row['no_telp'],
-            'unit'    => $row['unit'],
-            'kawasan' => $row['kawasan'],
+            'nama'    => $nama,
+            'no_ktp'  => $noKtp,
+            'no_telp' => $noTelp,
+            'unit'    => $unit,
+            'kawasan' => $kawasan,
         ]);
     }
 
-    // -------------------------------------------------------
-    // Getters so the controller can report results
-    // -------------------------------------------------------
-    public function getImportedCount(): int
-    {
-        return $this->importedCount;
-    }
-
-    public function getDuplicateCount(): int
-    {
-        return $this->duplicateCount;
-    }
+    public function getImportedCount(): int  { return $this->importedCount; }
+    public function getSkippedCount(): int   { return $this->skippedCount;  }
+    public function getSkippedRows(): array  { return $this->skippedRows;   }
 }

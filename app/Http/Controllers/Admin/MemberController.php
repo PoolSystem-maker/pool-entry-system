@@ -49,11 +49,18 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'    => 'required|string|max:255',
-            'no_ktp'  => 'required|string|unique:members,no_ktp',
+            'nama'    => 'required|string|max:255|unique:members,nama',
+            'no_ktp'  => 'required|string',
             'no_telp' => 'required|string|max:20',
             'unit'    => 'required|string|max:50',
             'kawasan' => 'required|string|max:100',
+            // unit+kawasan combination must be unique
+            'unit'    => [
+                'required', 'string', 'max:50',
+                \Illuminate\Validation\Rule::unique('members')->where(fn($q) =>
+                    $q->where('kawasan', request('kawasan'))
+                ),
+            ],
         ]);
 
         // qr_token is auto-generated in the Member model boot() method
@@ -92,13 +99,21 @@ class MemberController extends Controller
     public function update(Request $request, Member $member)
     {
         $request->validate([
-            'nama'        => 'required|string|max:255',
-            'no_ktp'      => 'required|string|unique:members,no_ktp,' . $member->id,
+            'nama'        => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('members', 'nama')->ignore($member->id),
+            ],
+            'no_ktp'      => 'required|string',
             'no_telp'     => 'required|string|max:20',
-            'unit'        => 'required|string|max:50',
             'kawasan'     => 'required|string|max:100',
             'daily_limit' => 'required|integer|min:1|max:100',
             'is_active'   => 'boolean',
+            'unit'        => [
+                'required', 'string', 'max:50',
+                \Illuminate\Validation\Rule::unique('members')
+                    ->where(fn($q) => $q->where('kawasan', request('kawasan')))
+                    ->ignore($member->id),
+            ],
         ]);
 
         $member->update([
@@ -169,12 +184,16 @@ class MemberController extends Controller
         $import = new MembersImport;
         Excel::import($import, $request->file('file'));
 
-        $imported   = $import->getImportedCount();
-        $duplicates = $import->getDuplicateCount();
+        $imported = $import->getImportedCount();
+        $skipped  = $import->getSkippedCount();
+        $rows     = $import->getSkippedRows();
 
-        return back()->with('success',
-            "{$imported} member berhasil diimport. {$duplicates} duplikat dilewati."
-        );
+        // Store skipped rows in session to display on next page
+        session(['import_skipped' => $rows]);
+
+        return redirect()->route('admin.members.index')
+            ->with('success',
+                "{$imported} member berhasil diimport. {$skipped} dilewati.");
     }
 
     // -------------------------------------------------------

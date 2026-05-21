@@ -2,6 +2,58 @@
 
 @section('content')
 
+{{-- IMPORT SKIP REPORT --}}
+@if(session('import_skipped') && count(session('import_skipped')) > 0)
+    <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3);
+        border-radius:12px; padding:16px; margin-bottom:16px;">
+
+        <h3 style="color:#fcd34d; font-size:14px; font-weight:700; margin-bottom:12px;">
+            ⚠️ {{ count(session('import_skipped')) }} baris dilewati saat import:
+        </h3>
+
+        <div style="overflow-x:auto;">
+            <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:6px 12px;
+                            color:var(--text-muted);">Nama</th>
+                        <th style="text-align:left; padding:6px 12px;
+                            color:var(--text-muted);">No KTP</th>
+                        <th style="text-align:left; padding:6px 12px;
+                            color:var(--text-muted);">Unit</th>
+                        <th style="text-align:left; padding:6px 12px;
+                            color:var(--text-muted);">Kawasan</th>
+                        <th style="text-align:left; padding:6px 12px;
+                            color:var(--text-muted);">Alasan Dilewati</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(session('import_skipped') as $row)
+                        <tr style="border-top:1px solid var(--border);">
+                            <td style="padding:8px 12px; color:var(--text);">
+                                {{ $row['nama'] }}
+                            </td>
+                            <td style="padding:8px 12px; color:var(--text-muted);">
+                                {{ $row['no_ktp'] }}
+                            </td>
+                            <td style="padding:8px 12px; color:var(--text-muted);">
+                                {{ $row['unit'] }}
+                            </td>
+                            <td style="padding:8px 12px; color:var(--text-muted);">
+                                {{ $row['kawasan'] }}
+                            </td>
+                            <td style="padding:8px 12px; color:#fcd34d; font-size:12px;">
+                                {{ $row['reason'] }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+@endif
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Members</h1>
@@ -57,7 +109,8 @@
 </div>
 
 {{-- TABLE — desktop --}}
-<div class="table-wrap" style="display:block;">
+<div class="table-wrap">
+
     {{-- Desktop table --}}
     <div class="desktop-table">
         <table>
@@ -81,7 +134,8 @@
                     <tr>
                         <td>
                             <a href="{{ route('admin.members.show', $member) }}"
-                                style="color:var(--accent); text-decoration:none; font-weight:600;">
+                                style="color:var(--accent); text-decoration:none;
+                                    font-weight:600;">
                                 {{ $member->nama }}
                             </a>
                         </td>
@@ -89,18 +143,21 @@
                         <td style="color:var(--text-muted);">{{ $member->kawasan }}</td>
                         <td style="color:var(--text-muted);">{{ $member->no_telp }}</td>
                         <td style="text-align:center;">
-                            <span class="badge {{ $member->is_active ? 'badge-green' : 'badge-red' }}">
+                            <span class="badge
+                                {{ $member->is_active ? 'badge-green' : 'badge-red' }}">
                                 {{ $member->is_active ? 'Aktif' : 'Nonaktif' }}
                             </span>
                         </td>
                         <td style="text-align:center;">
                             <span style="font-weight:700;
-                                color:{{ $used >= $limit ? 'var(--danger)' : 'var(--success)' }};">
+                                color:{{ $used >= $limit
+                                    ? 'var(--danger)' : 'var(--success)' }};">
                                 {{ $used }}/{{ $limit }}
                             </span>
                         </td>
                         <td style="text-align:center;">
-                            <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                            <div style="display:flex; gap:6px;
+                                justify-content:center; flex-wrap:wrap;">
                                 <a href="{{ route('admin.members.show', $member) }}"
                                     class="btn btn-sm btn-ghost">Lihat</a>
                                 <a href="{{ route('admin.members.edit', $member) }}"
@@ -116,15 +173,17 @@
                                     action="{{ route('admin.members.destroy', $member) }}"
                                     onsubmit="return confirm('Yakin hapus member ini?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                    <button type="submit"
+                                        class="btn btn-sm btn-danger">Hapus</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align:center; padding:40px;
-                            color:var(--text-muted);">
+                        <td colspan="7"
+                            style="text-align:center; padding:40px;
+                                color:var(--text-muted);">
                             Belum ada member.
                             <a href="{{ route('admin.members.create') }}"
                                 style="color:var(--accent);">Tambah sekarang</a>
@@ -151,17 +210,20 @@
                                 font-size:15px; text-decoration:none;">
                             {{ $member->nama }}
                         </a>
-                        <p style="color:var(--text-muted); font-size:13px; margin-top:2px;">
+                        <p style="color:var(--text-muted); font-size:13px;
+                            margin-top:2px;">
                             {{ $member->unit }} — {{ $member->kawasan }}
                         </p>
                     </div>
                     <div style="display:flex; flex-direction:column;
                         align-items:flex-end; gap:6px;">
-                        <span class="badge {{ $member->is_active ? 'badge-green' : 'badge-red' }}">
+                        <span class="badge
+                            {{ $member->is_active ? 'badge-green' : 'badge-red' }}">
                             {{ $member->is_active ? 'Aktif' : 'Nonaktif' }}
                         </span>
                         <span style="font-size:13px; font-weight:700;
-                            color:{{ $used >= $limit ? 'var(--danger)' : 'var(--success)' }};">
+                            color:{{ $used >= $limit
+                                ? 'var(--danger)' : 'var(--success)' }};">
                             {{ $used }}/{{ $limit }} akses
                         </span>
                     </div>
@@ -182,7 +244,8 @@
                         action="{{ route('admin.members.destroy', $member) }}"
                         onsubmit="return confirm('Yakin hapus member ini?')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                        <button type="submit"
+                            class="btn btn-sm btn-danger">Hapus</button>
                     </form>
                 </div>
             </div>
@@ -199,6 +262,7 @@
             {{ $members->links() }}
         </div>
     @endif
+
 </div>
 
 <style>
