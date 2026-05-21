@@ -4,10 +4,22 @@
 
 {{-- IMPORT SKIP REPORT --}}
 @if(session('import_skipped') && count(session('import_skipped')) > 0)
-    <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3);
-        border-radius:12px; padding:16px; margin-bottom:16px;">
+    <div id="skip-report" style="background:rgba(245,158,11,0.1);
+        border:1px solid rgba(245,158,11,0.3);
+        border-radius:12px; padding:16px; margin-bottom:16px;
+        position:relative;">
 
-        <h3 style="color:#fcd34d; font-size:14px; font-weight:700; margin-bottom:12px;">
+        {{-- Close button --}}
+        <button onclick="closeSkipReport()"
+            style="position:absolute; top:12px; right:12px; background:none;
+                border:none; color:var(--text-muted); font-size:18px;
+                cursor:pointer; line-height:1; padding:4px 8px; border-radius:4px;"
+            title="Tutup">
+            ✕
+        </button>
+
+        <h3 style="color:#fcd34d; font-size:14px; font-weight:700;
+            margin-bottom:12px; padding-right:32px;">
             ⚠️ {{ count(session('import_skipped')) }} baris dilewati saat import:
         </h3>
 
@@ -52,6 +64,20 @@
         </div>
 
     </div>
+
+    <script>
+        function closeSkipReport() {
+            document.getElementById('skip-report').style.display = 'none';
+            // Also clear from server session so it doesn't come back on refresh
+            fetch('{{ route("admin.members.clearImportSession") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                }
+            });
+        }
+    </script>
 @endif
 
 <div class="page-header">
