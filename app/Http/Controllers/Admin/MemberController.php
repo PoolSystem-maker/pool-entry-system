@@ -381,13 +381,13 @@ class MemberController extends Controller
 
     <!-- Top-right label -->
     <text x="308" y="16"
-        font-family="Arial,sans-serif" font-size="6"
+        font-family="Arial,sans-serif" font-size="7"
         fill="rgba(255,255,255,0.5)" letter-spacing="1"
         text-anchor="end">POOL ENTRY PASS</text>
 
     <!-- Left: POOL ENTRY PASS small label -->
     <text x="19" y="36"
-        font-family="Arial,sans-serif" font-size="6"
+        font-family="Arial,sans-serif" font-size="7"
         fill="rgba(255,255,255,0.7)" letter-spacing="1">
         POOL ENTRY PASS
     </text>
