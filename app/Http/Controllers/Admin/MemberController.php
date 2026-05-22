@@ -393,7 +393,7 @@ class MemberController extends Controller
     </text>
 
     <!-- Left: Member name -->
-    <text x="19" y="76"
+    <text x="19" y="78"
         font-family="Arial,sans-serif" font-size="19"
         font-weight="bold" fill="white">{$nama}</text>
 
