@@ -344,11 +344,6 @@ class MemberController extends Controller
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $id      = $member->id;
 
-        // Truncate long names so they don't overflow the card
-        $namaDisplay = mb_strlen($nama) > 20
-            ? mb_substr($nama, 0, 20) . '...'
-            : $nama;
-
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -367,50 +362,67 @@ class MemberController extends Controller
     <!-- Card background -->
     <rect width="323" height="204" rx="15" fill="url(#cardBg)"/>
 
-    <!-- Decorative circles -->
-    <circle cx="290" cy="-10" r="70" fill="white" fill-opacity="0.06"/>
-    <circle cx="60"  cy="180" r="50" fill="white" fill-opacity="0.05"/>
+    <!-- Decorative circle top-right (card::before) -->
+    <circle cx="283" cy="-15" r="75"
+        fill="white" fill-opacity="0.07" clip-path="url(#cardClip)"/>
 
-    <!-- Top label -->
-    <text x="19" y="22"
-        font-family="Arial,sans-serif" font-size="7"
-        fill="rgba(255,255,255,0.5)" letter-spacing="1.5">
+    <!-- Decorative circle bottom-left (card::after) -->
+    <circle cx="76" cy="174" r="47"
+        fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
+
+    <!-- Top-right label: POOL ENTRY PASS -->
+    <text x="304" y="16"
+        font-family="Arial,sans-serif" font-size="6"
+        font-weight="400"
+        fill="rgba(255,255,255,0.5)"
+        letter-spacing="1"
+        text-anchor="end">
         POOL ENTRY PASS
     </text>
 
-    <!-- Member name -->
-    <text x="19" y="72"
-        font-family="Arial,sans-serif" font-size="18"
-        font-weight="bold" fill="white">
-        {$namaDisplay}
+    <!-- card-title: POOL ENTRY PASS (left side, smaller) -->
+    <text x="19" y="40"
+        font-family="Arial,sans-serif" font-size="6"
+        fill="rgba(255,255,255,0.7)"
+        letter-spacing="1"
+        text-transform="uppercase">
+        POOL ENTRY PASS
     </text>
 
-    <!-- Unit -->
-    <text x="19" y="95"
-        font-family="Arial,sans-serif" font-size="13"
+    <!-- card-name: member name -->
+    <text x="19" y="72"
+        font-family="Arial,sans-serif" font-size="16"
+        font-weight="bold" fill="white">
+        {$nama}
+    </text>
+
+    <!-- card-unit -->
+    <text x="19" y="93"
+        font-family="Arial,sans-serif" font-size="12"
         font-weight="600" fill="#bfdbfe">
         Unit {$unit}
     </text>
 
-    <!-- Kawasan -->
-    <text x="19" y="114"
-        font-family="Arial,sans-serif" font-size="10"
-        fill="rgba(255,255,255,0.65)" letter-spacing="0.5">
+    <!-- card-kawasan -->
+    <text x="19" y="111"
+        font-family="Arial,sans-serif" font-size="9"
+        fill="rgba(255,255,255,0.7)"
+        letter-spacing="0.5">
         {$kawasan}
     </text>
 
-    <!-- Member ID -->
+    <!-- card-id -->
     <text x="19" y="168"
         font-family="monospace,Arial" font-size="8"
-        fill="rgba(255,255,255,0.35)">
+        fill="rgba(255,255,255,0.5)">
         ID #{$id}
     </text>
 
-    <!-- QR Code white background box -->
-    <rect x="208" y="14" width="101" height="101" rx="8" fill="white"/>
+    <!-- QR white background box -->
+    <rect x="208" y="18" width="101" height="101" rx="6" fill="white"/>
 
-    <!-- QR Code — scaled to fit inside the white box -->
-    <g transform="translate(211, 17) scale(0.615)">
+    <!-- QR Code content scaled to fit inside white box (106px = 28mm) -->
+    <g transform="translate(211, 21) scale(0.615)">
         {$qrInner}
     </g>
 
