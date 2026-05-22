@@ -333,7 +333,6 @@ class MemberController extends Controller
     // -------------------------------------------------------
     private function buildCardSvg(Member $member, string $qrSvg): string
     {
-        // Strip XML declaration and outer SVG tags from QR code
         $qrInner = preg_replace('/<\?xml[^>]*\?>\s*/i', '', $qrSvg);
         $qrInner = preg_replace('/<svg[^>]*>/i', '', $qrInner);
         $qrInner = str_replace('</svg>', '', $qrInner);
@@ -343,6 +342,14 @@ class MemberController extends Controller
         $unit    = htmlspecialchars($member->unit,    ENT_XML1, 'UTF-8');
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $id      = $member->id;
+
+        // QR box: 120x120px, vertically centered in 204px card = top at (204-120)/2 = 42
+        // Positioned on right side starting at x=190
+        $qrBoxX     = 190;
+        $qrBoxY     = 42;
+        $qrBoxSize  = 120;
+        $qrPadding  = 4;
+        $qrScale    = ($qrBoxSize - ($qrPadding * 2)) / 150; // 150 is QR generate size
 
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
@@ -362,67 +369,54 @@ class MemberController extends Controller
     <!-- Card background -->
     <rect width="323" height="204" rx="15" fill="url(#cardBg)"/>
 
-    <!-- Decorative circle top-right (card::before) -->
-    <circle cx="283" cy="-15" r="75"
+    <!-- Decorative circle top-right -->
+    <circle cx="290" cy="-10" r="80"
         fill="white" fill-opacity="0.07" clip-path="url(#cardClip)"/>
 
-    <!-- Decorative circle bottom-left (card::after) -->
-    <circle cx="76" cy="174" r="47"
+    <!-- Decorative circle bottom-left -->
+    <circle cx="70" cy="180" r="55"
         fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
 
-    <!-- Top-right label: POOL ENTRY PASS -->
-    <text x="304" y="16"
+    <!-- Top-right label -->
+    <text x="308" y="16"
         font-family="Arial,sans-serif" font-size="6"
-        font-weight="400"
-        fill="rgba(255,255,255,0.5)"
-        letter-spacing="1"
-        text-anchor="end">
+        fill="rgba(255,255,255,0.5)" letter-spacing="1"
+        text-anchor="end">POOL ENTRY PASS</text>
+
+    <!-- Left: POOL ENTRY PASS small label -->
+    <text x="19" y="36"
+        font-family="Arial,sans-serif" font-size="6"
+        fill="rgba(255,255,255,0.7)" letter-spacing="1">
         POOL ENTRY PASS
     </text>
 
-    <!-- card-title: POOL ENTRY PASS (left side, smaller) -->
-    <text x="19" y="40"
-        font-family="Arial,sans-serif" font-size="6"
-        fill="rgba(255,255,255,0.7)"
-        letter-spacing="1"
-        text-transform="uppercase">
-        POOL ENTRY PASS
-    </text>
-
-    <!-- card-name: member name -->
+    <!-- Left: Member name -->
     <text x="19" y="72"
         font-family="Arial,sans-serif" font-size="16"
-        font-weight="bold" fill="white">
-        {$nama}
-    </text>
+        font-weight="bold" fill="white">{$nama}</text>
 
-    <!-- card-unit -->
+    <!-- Left: Unit -->
     <text x="19" y="93"
         font-family="Arial,sans-serif" font-size="12"
-        font-weight="600" fill="#bfdbfe">
-        Unit {$unit}
-    </text>
+        font-weight="600" fill="#bfdbfe">Unit {$unit}</text>
 
-    <!-- card-kawasan -->
+    <!-- Left: Kawasan -->
     <text x="19" y="111"
         font-family="Arial,sans-serif" font-size="9"
-        fill="rgba(255,255,255,0.7)"
-        letter-spacing="0.5">
-        {$kawasan}
-    </text>
+        fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
 
-    <!-- card-id -->
+    <!-- Left: ID -->
     <text x="19" y="168"
         font-family="monospace,Arial" font-size="8"
-        fill="rgba(255,255,255,0.5)">
-        ID #{$id}
-    </text>
+        fill="rgba(255,255,255,0.5)">ID #{$id}</text>
 
-    <!-- QR white background box -->
-    <rect x="208" y="18" width="101" height="101" rx="6" fill="white"/>
+    <!-- QR white box — vertically centered, right side -->
+    <rect x="{$qrBoxX}" y="{$qrBoxY}"
+        width="{$qrBoxSize}" height="{$qrBoxSize}"
+        rx="8" fill="white"/>
 
-    <!-- QR Code content scaled to fit inside white box (106px = 28mm) -->
-    <g transform="translate(211, 21) scale(0.615)">
+    <!-- QR code content -->
+    <g transform="translate({$qrBoxX+$qrPadding}, {$qrBoxY+$qrPadding}) scale({$qrScale})">
         {$qrInner}
     </g>
 
