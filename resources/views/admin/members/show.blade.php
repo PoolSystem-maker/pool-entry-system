@@ -14,9 +14,9 @@
         <a href="{{ route('admin.members.edit', $member) }}" class="btn btn-warning">
             ✏️ Edit
         </a>
-        <a href="{{ route('admin.members.printCard', $member) }}" target="_blank"
+        <a href="{{ route('admin.members.printCard', $member) }}"
             class="btn" style="background:#7c3aed; color:#fff;">
-            🖨️ Print Card
+            ⬇ Download Card
         </a>
     </div>
 </div>
