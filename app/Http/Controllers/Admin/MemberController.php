@@ -345,12 +345,14 @@ class MemberController extends Controller
 
         // QR box: 120x120px, vertically centered in 204px card = top at (204-120)/2 = 42
         // Positioned on right side starting at x=190
-        $qrBoxX     = 190;
-        $qrBoxY     = 42;
-        $qrBoxSize  = 120;
-        $qrPadding  = 4;
-        $qrScale    = ($qrBoxSize - ($qrPadding * 2)) / 150; // 150 is QR generate size
-
+        $qrBoxX       = 190;
+        $qrBoxY       = 42;
+        $qrBoxSize    = 120;
+        $qrPadding    = 4;
+        $qrScale      = ($qrBoxSize - ($qrPadding * 2)) / 150;
+        $qrInnerX     = $qrBoxX + $qrPadding;
+        $qrInnerY     = $qrBoxY + $qrPadding;
+        
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -416,7 +418,7 @@ class MemberController extends Controller
         rx="8" fill="white"/>
 
     <!-- QR code content -->
-    <g transform="translate({$qrBoxX+$qrPadding}, {$qrBoxY+$qrPadding}) scale({$qrScale})">
+    <g transform="translate({$qrInnerX}, {$qrInnerY}) scale({$qrScale})">
         {$qrInner}
     </g>
 
