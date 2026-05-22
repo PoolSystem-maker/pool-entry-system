@@ -86,9 +86,9 @@
         <p class="page-subtitle">{{ $members->total() }} member terdaftar</p>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a href="{{ route('admin.members.printAllCards') }}" target="_blank"
+        <a href="{{ route('admin.members.downloadAllCards') }}"
             class="btn" style="background:#7c3aed; color:#fff;">
-            🖨️ Print All Cards
+            ⬇ Download All Cards (ZIP)
         </a>
         <a href="{{ route('admin.members.create') }}" class="btn btn-primary">
             + Tambah Member

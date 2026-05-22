@@ -91,7 +91,10 @@ class Member extends Model
         parent::boot();
 
         static::creating(function ($member) {
-            $member->qr_token = Str::uuid();
+            // Only generate QR token if one wasn't provided
+            if (empty($member->qr_token)) {
+                $member->qr_token = (string) Str::uuid();
+            }
         });
     }
 }

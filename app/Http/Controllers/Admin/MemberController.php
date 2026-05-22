@@ -275,4 +275,119 @@ class MemberController extends Controller
             "Batas akses hari ini untuk {$member->nama} diset ke {$request->override_limit}x."
         );
     }
+
+    // -------------------------------------------------------
+    // Download all member QR cards as a ZIP of SVG files
+    // Each file named by unit-kawasan
+    // -------------------------------------------------------
+    public function downloadAllCards()
+    {
+        $members = Member::orderBy('kawasan')->orderBy('nama')->get();
+
+        // Create a temporary ZIP file
+        $zipPath = storage_path('app/temp-cards.zip');
+
+        // Delete old temp file if exists
+        if (file_exists($zipPath)) {
+            unlink($zipPath);
+        }
+
+        $zip = new \ZipArchive();
+        $zip->open($zipPath, \ZipArchive::CREATE);
+
+        foreach ($members as $member) {
+            // Generate SVG card for this member
+            $qrSvg = QrCode::format('svg')
+                ->size(150)
+                ->generate($member->qr_token);
+
+            // Build a self-contained SVG card (CR80 size: 85.6mm x 54mm)
+            $cardSvg = $this->buildCardSvg($member, $qrSvg);
+
+            // Filename: unit-kawasan.svg e.g. "A-8-PALACE.svg"
+            $filename = $member->unit . '-' . $member->kawasan . '.svg';
+
+            $zip->addFromString($filename, $cardSvg);
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath, 'all-member-cards.zip', [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    // -------------------------------------------------------
+    // Build a self-contained SVG card for one member
+    // CR80 size: 323px x 204px (85.6mm x 54mm at 96dpi)
+    // -------------------------------------------------------
+    private function buildCardSvg(Member $member, string $qrSvg): string
+    {
+        // Extract inner SVG content from the QR code
+        $qrInner = preg_replace('/<\?xml[^>]*\?>/i', '', $qrSvg);
+        $qrInner = preg_replace('/<svg[^>]*>/i', '', $qrInner);
+        $qrInner = str_replace('</svg>', '', $qrInner);
+
+        $nama    = htmlspecialchars($member->nama);
+        $unit    = htmlspecialchars($member->unit);
+        $kawasan = htmlspecialchars($member->kawasan);
+        $id      = htmlspecialchars('#' . $member->id);
+
+        return <<<SVG
+    <svg xmlns="http://www.w3.org/2000/svg" width="323" height="204" viewBox="0 0 323 204">
+    <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#1e3a8a"/>
+        <stop offset="60%"  stop-color="#1d4ed8"/>
+        <stop offset="100%" stop-color="#0ea5e9"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Card background -->
+    <rect width="323" height="204" rx="15" fill="url(#bg)"/>
+
+    <!-- Decorative circles -->
+    <circle cx="280" cy="30"  r="60" fill="white" fill-opacity="0.07"/>
+    <circle cx="80"  cy="170" r="40" fill="white" fill-opacity="0.05"/>
+
+    <!-- Pool Entry Pass label -->
+    <text x="19" y="30" font-family="Arial,sans-serif" font-size="8"
+        fill="rgba(255,255,255,0.5)" letter-spacing="1" text-anchor="start">
+        POOL ENTRY PASS
+    </text>
+
+    <!-- Member name -->
+    <text x="19" y="75" font-family="Arial,sans-serif" font-size="16"
+        font-weight="bold" fill="white">
+        {$nama}
+    </text>
+
+    <!-- Unit -->
+    <text x="19" y="98" font-family="Arial,sans-serif" font-size="13"
+        font-weight="600" fill="#bfdbfe">
+        Unit {$unit}
+    </text>
+
+    <!-- Kawasan -->
+    <text x="19" y="116" font-family="Arial,sans-serif" font-size="10"
+        fill="rgba(255,255,255,0.7)" letter-spacing="0.5">
+        {$kawasan}
+    </text>
+
+    <!-- Member ID -->
+    <text x="19" y="160" font-family="monospace,Arial" font-size="8"
+        fill="rgba(255,255,255,0.4)">
+        {$id}
+    </text>
+
+    <!-- QR Code box -->
+    <rect x="210" y="16" width="97" height="97" rx="6" fill="white"/>
+
+    <!-- QR Code content -->
+    <g transform="translate(213, 19) scale(0.6)">
+        {$qrInner}
+    </g>
+    </svg>
+    SVG;
+    }
 }

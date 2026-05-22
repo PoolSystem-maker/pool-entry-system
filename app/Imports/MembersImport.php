@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Member;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
@@ -15,14 +16,11 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
     private int   $importedCount = 0;
     private int   $skippedCount  = 0;
     private array $skippedRows   = [];
-
-    // Track combinations imported in this file session
     private array $importedUnits = [];
     private array $importedNames = [];
 
     public function model(array $row)
     {
-        // Skip completely empty rows
         if (empty($row['nama_pemiliki']) && empty($row['unit'])) {
             return null;
         }
@@ -33,7 +31,14 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
         $unit    = trim((string) ($row['unit']           ?? ''));
         $kawasan = trim((string) ($row['kawasan']        ?? ''));
 
-        // Skip if required fields are empty
+        // Accept existing QR ID if provided, otherwise generate new one
+        // Column header is "QR ID" which WithHeadingRow converts to "qr_id"
+        $qrToken = trim((string) ($row['qr_id'] ?? ''));
+        if (empty($qrToken)) {
+            $qrToken = (string) Str::uuid();
+        }
+
+        // Skip if required fields empty
         if (empty($nama) || empty($unit) || empty($kawasan)) {
             $this->skippedCount++;
             $this->skippedRows[] = [
@@ -59,7 +64,7 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
             return null;
         }
 
-        // Check duplicate nama within this import file
+        // Check duplicate nama within this file
         if (in_array(strtolower($nama), $this->importedNames)) {
             $this->skippedCount++;
             $this->skippedRows[] = [
@@ -72,8 +77,7 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
             return null;
         }
 
-        // Check duplicate unit+kawasan combination in database
-        $unitKey = strtolower($unit . '|' . $kawasan);
+        // Check duplicate unit+kawasan in database
         if (Member::where('unit', $unit)->where('kawasan', $kawasan)->exists()) {
             $this->skippedCount++;
             $this->skippedRows[] = [
@@ -86,7 +90,8 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
             return null;
         }
 
-        // Check duplicate unit+kawasan within this import file
+        // Check duplicate unit+kawasan within this file
+        $unitKey = strtolower($unit . '|' . $kawasan);
         if (in_array($unitKey, $this->importedUnits)) {
             $this->skippedCount++;
             $this->skippedRows[] = [
@@ -99,18 +104,22 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
             return null;
         }
 
-        // All checks passed — import this row
         $this->importedUnits[] = $unitKey;
         $this->importedNames[] = strtolower($nama);
         $this->importedCount++;
 
-        return new Member([
-            'nama'    => $nama,
-            'no_ktp'  => $noKtp,
-            'no_telp' => $noTelp,
-            'unit'    => $unit,
-            'kawasan' => $kawasan,
+        // Use existing qr_token from Excel if available
+        // bypasses the auto-generate in model boot()
+        $member = new Member([
+            'nama'     => $nama,
+            'no_ktp'   => $noKtp,
+            'no_telp'  => $noTelp,
+            'unit'     => $unit,
+            'kawasan'  => $kawasan,
+            'qr_token' => $qrToken,
         ]);
+
+        return $member;
     }
 
     public function getImportedCount(): int  { return $this->importedCount; }
