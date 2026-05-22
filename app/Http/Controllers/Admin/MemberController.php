@@ -333,6 +333,7 @@ class MemberController extends Controller
     // -------------------------------------------------------
     private function buildCardSvg(Member $member, string $qrSvg): string
     {
+        // Strip XML declaration and outer SVG tags from QR code
         $qrInner = preg_replace('/<\?xml[^>]*\?>\s*/i', '', $qrSvg);
         $qrInner = preg_replace('/<svg[^>]*>/i', '', $qrInner);
         $qrInner = str_replace('</svg>', '', $qrInner);
@@ -343,16 +344,15 @@ class MemberController extends Controller
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $id      = $member->id;
 
-        // QR box: 120x120px, vertically centered in 204px card = top at (204-120)/2 = 42
-        // Positioned on right side starting at x=190
-        $qrBoxX       = 190;
-        $qrBoxY       = 42;
-        $qrBoxSize    = 120;
-        $qrPadding    = 4;
-        $qrScale      = ($qrBoxSize - ($qrPadding * 2)) / 150;
-        $qrInnerX     = $qrBoxX + $qrPadding;
-        $qrInnerY     = $qrBoxY + $qrPadding;
-        
+        // QR position and size
+        $qrBoxX    = 182;
+        $qrBoxY    = 42;
+        $qrBoxSize = 120;
+        $qrPadding = 4;
+        $qrScale   = ($qrBoxSize - ($qrPadding * 2)) / 150;
+        $qrInnerX  = $qrBoxX + $qrPadding;
+        $qrInnerY  = $qrBoxY + $qrPadding;
+
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -393,26 +393,26 @@ class MemberController extends Controller
     </text>
 
     <!-- Left: Member name -->
-    <text x="19" y="72"
-        font-family="Arial,sans-serif" font-size="16"
+    <text x="19" y="76"
+        font-family="Arial,sans-serif" font-size="19"
         font-weight="bold" fill="white">{$nama}</text>
 
     <!-- Left: Unit -->
-    <text x="19" y="93"
-        font-family="Arial,sans-serif" font-size="12"
+    <text x="19" y="100"
+        font-family="Arial,sans-serif" font-size="14"
         font-weight="600" fill="#bfdbfe">Unit {$unit}</text>
 
     <!-- Left: Kawasan -->
-    <text x="19" y="111"
-        font-family="Arial,sans-serif" font-size="9"
+    <text x="19" y="120"
+        font-family="Arial,sans-serif" font-size="11"
         fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
 
-    <!-- Left: ID -->
-    <text x="19" y="168"
-        font-family="monospace,Arial" font-size="8"
+    <!-- Left: ID — right below kawasan -->
+    <text x="19" y="138"
+        font-family="monospace,Arial" font-size="9"
         fill="rgba(255,255,255,0.5)">ID #{$id}</text>
 
-    <!-- QR white box — vertically centered, right side -->
+    <!-- QR white background box -->
     <rect x="{$qrBoxX}" y="{$qrBoxY}"
         width="{$qrBoxSize}" height="{$qrBoxSize}"
         rx="8" fill="white"/>
