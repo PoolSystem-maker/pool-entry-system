@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Monthly Logs</h1>
-        <p class="page-subtitle">Riwayat akses granted per bulan</p>
+        <p class="page-subtitle">Riwayat akses per bulan</p>
     </div>
     <a href="{{ route('admin.monthly-logs.export', ['month' => $month, 'year' => $year]) }}"
         class="btn btn-success">
@@ -45,11 +45,16 @@
     </form>
 </div>
 
-{{-- SUMMARY STAT --}}
-@php $totalGranted = collect($logs)->flatten()->count(); @endphp
+{{-- SUMMARY --}}
+@php
+    $totalEntries  = collect($logs)->flatten()->count();
+    $totalGranted  = collect($logs)->flatten()->where('status', 'granted')->count();
+    $totalDenied   = collect($logs)->flatten()->where('status', 'denied')->count();
+@endphp
+
 <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
     <div class="card" style="display:flex; align-items:center; gap:12px;
-        padding:14px 20px; flex:1; min-width:160px;">
+        padding:14px 20px; flex:1; min-width:140px;">
         <div style="font-size:28px;">📅</div>
         <div>
             <div style="color:var(--text-muted); font-size:12px;">Total Hari Aktif</div>
@@ -59,12 +64,32 @@
         </div>
     </div>
     <div class="card" style="display:flex; align-items:center; gap:12px;
-        padding:14px 20px; flex:1; min-width:160px;">
+        padding:14px 20px; flex:1; min-width:140px;">
         <div style="font-size:28px;">🚪</div>
         <div>
-            <div style="color:var(--text-muted); font-size:12px;">Total Akses Bulan Ini</div>
+            <div style="color:var(--text-muted); font-size:12px;">Total Scan</div>
+            <div style="color:var(--text); font-size:22px; font-weight:800;">
+                {{ $totalEntries }}
+            </div>
+        </div>
+    </div>
+    <div class="card" style="display:flex; align-items:center; gap:12px;
+        padding:14px 20px; flex:1; min-width:140px;">
+        <div style="font-size:28px;">✅</div>
+        <div>
+            <div style="color:var(--text-muted); font-size:12px;">Granted</div>
             <div style="color:var(--success); font-size:22px; font-weight:800;">
                 {{ $totalGranted }}
+            </div>
+        </div>
+    </div>
+    <div class="card" style="display:flex; align-items:center; gap:12px;
+        padding:14px 20px; flex:1; min-width:140px;">
+        <div style="font-size:28px;">❌</div>
+        <div>
+            <div style="color:var(--text-muted); font-size:12px;">Denied</div>
+            <div style="color:var(--danger); font-size:22px; font-weight:800;">
+                {{ $totalDenied }}
             </div>
         </div>
     </div>
@@ -80,7 +105,16 @@
             <h2 style="font-size:14px; font-weight:700; color:var(--text);">
                 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
             </h2>
-            <span class="badge badge-blue">{{ $dayLogs->count() }} akses</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="badge badge-green">
+                    {{ $dayLogs->where('status','granted')->count() }} granted
+                </span>
+                @if($dayLogs->where('status','denied')->count() > 0)
+                    <span class="badge badge-red">
+                        {{ $dayLogs->where('status','denied')->count() }} denied
+                    </span>
+                @endif
+            </div>
         </div>
 
         {{-- Desktop table --}}
@@ -92,14 +126,18 @@
                         <th>Waktu</th>
                         <th>Nama</th>
                         <th>Unit</th>
+                        <th>Cluster</th>
                         <th>Kawasan</th>
+                        <th style="text-align:center;">Status</th>
+                        <th>Alasan Ditolak</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($dayLogs as $i => $log)
                         <tr>
                             <td style="color:var(--text-muted);">{{ $i + 1 }}</td>
-                            <td style="color:var(--text-muted); font-size:13px;">
+                            <td style="color:var(--text-muted); font-size:13px;
+                                white-space:nowrap;">
                                 {{ $log->scanned_at->format('H:i:s') }}
                             </td>
                             <td>
@@ -117,7 +155,20 @@
                                 {{ $log->member->unit ?? '-' }}
                             </td>
                             <td style="color:var(--text-muted);">
+                                {{ $log->member->cluster ?? '—' }}
+                            </td>
+                            <td style="color:var(--text-muted);">
                                 {{ $log->member->kawasan ?? '-' }}
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="badge
+                                    {{ $log->status === 'granted'
+                                        ? 'badge-green' : 'badge-red' }}">
+                                    {{ strtoupper($log->status) }}
+                                </span>
+                            </td>
+                            <td style="color:var(--text-muted); font-size:12px;">
+                                {{ $log->deny_reason ?? '—' }}
                             </td>
                         </tr>
                     @endforeach
@@ -128,34 +179,54 @@
         {{-- Mobile list --}}
         <div class="mobile-cards" style="display:none;">
             @foreach($dayLogs as $i => $log)
-                <div style="padding:12px 16px; border-bottom:1px solid var(--border);
-                    display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        @if($log->member)
-                            <a href="{{ route('admin.members.show', $log->member) }}"
-                                style="color:var(--accent); font-weight:600;
-                                    font-size:14px; text-decoration:none;">
-                                {{ $log->member->nama }}
-                            </a>
-                        @else
-                            <span style="color:var(--text-muted);">Unknown</span>
-                        @endif
-                        <p style="color:var(--text-muted); font-size:12px; margin-top:2px;">
-                            {{ $log->member->unit ?? '-' }} —
-                            {{ $log->member->kawasan ?? '-' }}
-                        </p>
+                <div style="padding:12px 16px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between;
+                        align-items:flex-start; margin-bottom:4px;">
+                        <div>
+                            @if($log->member)
+                                <a href="{{ route('admin.members.show', $log->member) }}"
+                                    style="color:var(--accent); font-weight:600;
+                                        font-size:14px; text-decoration:none;">
+                                    {{ $log->member->nama }}
+                                </a>
+                            @else
+                                <span style="color:var(--text-muted);">Unknown</span>
+                            @endif
+                            <p style="color:var(--text-muted); font-size:12px;
+                                margin-top:2px;">
+                                {{ $log->member->unit ?? '-' }}
+                                @if($log->member?->cluster)
+                                    ({{ $log->member->cluster }})
+                                @endif
+                                — {{ $log->member->kawasan ?? '-' }}
+                            </p>
+                        </div>
+                        <div style="display:flex; flex-direction:column;
+                            align-items:flex-end; gap:4px;">
+                            <span class="badge
+                                {{ $log->status === 'granted'
+                                    ? 'badge-green' : 'badge-red' }}">
+                                {{ strtoupper($log->status) }}
+                            </span>
+                            <span style="color:var(--text-muted); font-size:12px;">
+                                {{ $log->scanned_at->format('H:i:s') }}
+                            </span>
+                        </div>
                     </div>
-                    <span style="color:var(--text-muted); font-size:12px;">
-                        {{ $log->scanned_at->format('H:i:s') }}
-                    </span>
+                    @if($log->deny_reason)
+                        <p style="color:var(--danger); font-size:12px; margin-top:4px;">
+                            {{ $log->deny_reason }}
+                        </p>
+                    @endif
                 </div>
             @endforeach
         </div>
 
     </div>
 @empty
-    <div class="card" style="text-align:center; padding:48px; color:var(--text-muted);">
-        Tidak ada data akses untuk bulan ini.
+    <div class="card" style="text-align:center; padding:48px;
+        color:var(--text-muted);">
+        Tidak ada data untuk bulan ini.
     </div>
 @endforelse
 
