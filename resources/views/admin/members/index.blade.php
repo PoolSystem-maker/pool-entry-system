@@ -145,7 +145,7 @@
                     <th>Nama</th>
                     <th>Unit</th>
                     <th>Kawasan</th>
-                    <th>No Telp</th>
+                    <th>Cluster</th>
                     <th style="text-align:center;">Status</th>
                     <th style="text-align:center;">Akses Hari Ini</th>
                     <th style="text-align:center;">Aksi</th>
@@ -167,7 +167,7 @@
                         </td>
                         <td style="color:var(--text-muted);">{{ $member->unit }}</td>
                         <td style="color:var(--text-muted);">{{ $member->kawasan }}</td>
-                        <td style="color:var(--text-muted);">{{ $member->no_telp }}</td>
+                        <td style="color:var(--text-muted);">{{ $member->cluster ?? '—' }}</td>
                         <td style="text-align:center;">
                             <span class="badge
                                 {{ $member->is_active ? 'badge-green' : 'badge-red' }}">

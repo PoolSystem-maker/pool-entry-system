@@ -60,6 +60,11 @@
                         margin-top:2px;">{{ $member->unit }}</p>
                 </div>
                 <div>
+                    <p style="color:var(--text-muted); font-size:12px;">Cluster</p>
+                    <p style="color:var(--text); font-weight:500;
+                        margin-top:2px;">{{ $member->cluster ?? '—' }}</p>
+                </div>
+                <div>
                     <p style="color:var(--text-muted); font-size:12px;">Kawasan</p>
                     <p style="color:var(--text); font-weight:500;
                         margin-top:2px;">{{ $member->kawasan }}</p>

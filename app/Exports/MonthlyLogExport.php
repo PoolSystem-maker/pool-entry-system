@@ -18,41 +18,51 @@ class MonthlyLogExport implements FromCollection, WithHeadings, WithTitle
         $this->year  = $year;
     }
 
-    // -------------------------------------------------------
-    // Sheet title in the Excel file
-    // -------------------------------------------------------
     public function title(): string
     {
         return "Log {$this->year}-{$this->month}";
     }
 
-    // -------------------------------------------------------
-    // Column headers
-    // -------------------------------------------------------
     public function headings(): array
     {
-        return ['NO', 'TANGGAL', 'NAMA', 'UNIT', 'KAWASAN', 'WAKTU MASUK'];
+        return [
+            'NO',
+            'TANGGAL',
+            'WAKTU',
+            'NAMA',
+            'UNIT',
+            'CLUSTER',
+            'KAWASAN',
+            'NO KTP',
+            'NO TELP',
+            'STATUS',
+            'ALASAN DITOLAK',
+            'GATE',
+        ];
     }
 
-    // -------------------------------------------------------
-    // Only granted entries for the selected month
-    // -------------------------------------------------------
     public function collection()
     {
+        // Now includes ALL entries — both granted and denied
         return EntryLog::with('member')
-            ->where('status', 'granted')
             ->whereMonth('scanned_at', $this->month)
             ->whereYear('scanned_at', $this->year)
             ->orderBy('scanned_at', 'asc')
             ->get()
             ->map(function ($log, $index) {
                 return [
-                    'NO'          => $index + 1,
-                    'TANGGAL'     => $log->scanned_at->format('d/m/Y'),
-                    'NAMA'        => $log->member->nama ?? '-',
-                    'UNIT'        => $log->member->unit ?? '-',
-                    'KAWASAN'     => $log->member->kawasan ?? '-',
-                    'WAKTU MASUK' => $log->scanned_at->format('H:i:s'),
+                    'NO'             => $index + 1,
+                    'TANGGAL'        => $log->scanned_at->format('d/m/Y'),
+                    'WAKTU'          => $log->scanned_at->format('H:i:s'),
+                    'NAMA'           => $log->member->nama    ?? '-',
+                    'UNIT'           => $log->member->unit    ?? '-',
+                    'CLUSTER'        => $log->member->cluster ?? '-',
+                    'KAWASAN'        => $log->member->kawasan ?? '-',
+                    'NO KTP'         => $log->member->no_ktp  ?? '-',
+                    'NO TELP'        => $log->member->no_telp ?? '-',
+                    'STATUS'         => strtoupper($log->status),
+                    'ALASAN DITOLAK' => $log->deny_reason     ?? '-',
+                    'GATE'           => $log->gate_name,
                 ];
             });
     }
