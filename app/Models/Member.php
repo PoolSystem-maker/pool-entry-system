@@ -12,6 +12,7 @@ class Member extends Model
         'no_ktp',
         'no_telp',
         'unit',
+        'cluster',
         'kawasan',
         'qr_token',
         'is_active',

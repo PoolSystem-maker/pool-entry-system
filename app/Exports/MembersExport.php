@@ -16,7 +16,7 @@ class MembersExport implements FromCollection, WithHeadings
             'NO KTP',
             'NO-TELP',
             'UNIT',
-            'CLUSTER',
+            'ACCLUSTER',
             'KAWASAN',
             'QR ID',
         ];
@@ -31,7 +31,7 @@ class MembersExport implements FromCollection, WithHeadings
                 'NO KTP'        => $member->no_ktp,
                 'NO-TELP'       => $member->no_telp,
                 'UNIT'          => $member->unit,
-                'CLUSTER'     => $member->cluster ?? '',
+                'ACCLUSTER'     => $member->cluster ?? '',
                 'KAWASAN'       => $member->kawasan,
                 'QR ID'         => $member->qr_token,
             ];

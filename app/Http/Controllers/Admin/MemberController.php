@@ -49,20 +49,32 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'      => 'required|string|max:255|unique:members,nama',
-            'no_ktp'    => 'required|string',
-            'no_telp'   => 'required|string|max:20',
+            'nama'    => 'required|string|max:255|unique:members,nama',
+            'no_ktp'  => 'required|string',
+            'no_telp' => 'required|string|max:20',
             'cluster' => 'nullable|string|max:100',
-            'kawasan'   => 'required|in:Diamond Palace,Diamond Pavilion',
-            'unit'      => [
-                'required', 'string', 'max:50',
-                \Illuminate\Validation\Rule::unique('members')
-                    ->where(fn($q) => $q
-                        ->where('cluster', request('cluster') ?: null)
-                        ->where('kawasan',   request('kawasan'))
-                    ),
-            ],
+            'kawasan' => 'required|in:Diamond Palace,Diamond Pavilion',
+            'unit'    => 'required|string|max:50',
         ]);
+
+        $exists = Member::where('unit', $request->unit)
+            ->where('kawasan', $request->kawasan)
+            ->where(function($q) use ($request) {
+                if ($request->cluster) {
+                    $q->where('cluster', $request->cluster);
+                } else {
+                    $q->whereNull('cluster');
+                }
+            })
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'unit' => 'Unit ' . $request->unit .
+                    ($request->cluster ? ' (' . $request->cluster . ')' : '') .
+                    ' di kawasan ' . $request->kawasan . ' sudah terdaftar.'
+            ])->withInput();
+        }
 
         Member::create($request->only([
             'nama', 'no_ktp', 'no_telp', 'unit', 'cluster', 'kawasan'
@@ -106,27 +118,39 @@ class MemberController extends Controller
             ],
             'no_ktp'      => 'required|string',
             'no_telp'     => 'required|string|max:20',
-            'cluster'   => 'nullable|string|max:100',
+            'cluster'     => 'nullable|string|max:100',
             'kawasan'     => 'required|in:Diamond Palace,Diamond Pavilion',
             'daily_limit' => 'required|integer|min:1|max:100',
             'is_active'   => 'boolean',
-            'unit'        => [
-                'required', 'string', 'max:50',
-                \Illuminate\Validation\Rule::unique('members')
-                    ->where(fn($q) => $q
-                        ->where('cluster', request('cluster') ?: null)
-                        ->where('kawasan',   request('kawasan'))
-                    )
-                    ->ignore($member->id),
-            ],
+            'unit'        => 'required|string|max:50',
         ]);
+
+        $exists = Member::where('unit', $request->unit)
+            ->where('kawasan', $request->kawasan)
+            ->where(function($q) use ($request) {
+                if ($request->cluster) {
+                    $q->where('cluster', $request->cluster);
+                } else {
+                    $q->whereNull('cluster');
+                }
+            })
+            ->where('id', '!=', $member->id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'unit' => 'Unit ' . $request->unit .
+                    ($request->cluster ? ' (' . $request->cluster . ')' : '') .
+                    ' di kawasan ' . $request->kawasan . ' sudah terdaftar.'
+            ])->withInput();
+        }
 
         $member->update([
             'nama'        => $request->nama,
             'no_ktp'      => $request->no_ktp,
             'no_telp'     => $request->no_telp,
             'unit'        => $request->unit,
-            'cluster'   => $request->cluster ?: null,
+            'cluster'     => $request->cluster ?: null,
             'kawasan'     => $request->kawasan,
             'daily_limit' => $request->daily_limit,
             'is_active'   => $request->boolean('is_active'),
