@@ -49,23 +49,23 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'    => 'required|string|max:255|unique:members,nama',
-            'no_ktp'  => 'required|string',
-            'no_telp' => 'required|string|max:20',
-            'unit'    => 'required|string|max:50',
-            'kawasan' => 'required|string|max:100',
-            // unit+kawasan combination must be unique
-            'unit'    => [
+            'nama'      => 'required|string|max:255|unique:members,nama',
+            'no_ktp'    => 'required|string',
+            'no_telp'   => 'required|string|max:20',
+            'cluster' => 'nullable|string|max:100',
+            'kawasan'   => 'required|in:Diamond Palace,Diamond Pavilion',
+            'unit'      => [
                 'required', 'string', 'max:50',
-                \Illuminate\Validation\Rule::unique('members')->where(fn($q) =>
-                    $q->where('kawasan', request('kawasan'))
-                ),
+                \Illuminate\Validation\Rule::unique('members')
+                    ->where(fn($q) => $q
+                        ->where('cluster', request('cluster') ?: null)
+                        ->where('kawasan',   request('kawasan'))
+                    ),
             ],
         ]);
 
-        // qr_token is auto-generated in the Member model boot() method
         Member::create($request->only([
-            'nama', 'no_ktp', 'no_telp', 'unit', 'kawasan'
+            'nama', 'no_ktp', 'no_telp', 'unit', 'cluster', 'kawasan'
         ]));
 
         return redirect()->route('admin.members.index')
@@ -99,19 +99,24 @@ class MemberController extends Controller
     public function update(Request $request, Member $member)
     {
         $request->validate([
-            'nama'        => [
+            'nama' => [
                 'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('members', 'nama')->ignore($member->id),
+                \Illuminate\Validation\Rule::unique('members', 'nama')
+                    ->ignore($member->id),
             ],
             'no_ktp'      => 'required|string',
             'no_telp'     => 'required|string|max:20',
-            'kawasan'     => 'required|string|max:100',
+            'cluster'   => 'nullable|string|max:100',
+            'kawasan'     => 'required|in:Diamond Palace,Diamond Pavilion',
             'daily_limit' => 'required|integer|min:1|max:100',
             'is_active'   => 'boolean',
             'unit'        => [
                 'required', 'string', 'max:50',
                 \Illuminate\Validation\Rule::unique('members')
-                    ->where(fn($q) => $q->where('kawasan', request('kawasan')))
+                    ->where(fn($q) => $q
+                        ->where('cluster', request('cluster') ?: null)
+                        ->where('kawasan',   request('kawasan'))
+                    )
                     ->ignore($member->id),
             ],
         ]);
@@ -121,6 +126,7 @@ class MemberController extends Controller
             'no_ktp'      => $request->no_ktp,
             'no_telp'     => $request->no_telp,
             'unit'        => $request->unit,
+            'cluster'   => $request->cluster ?: null,
             'kawasan'     => $request->kawasan,
             'daily_limit' => $request->daily_limit,
             'is_active'   => $request->boolean('is_active'),

@@ -8,17 +8,20 @@ use Illuminate\Support\Collection;
 
 class SampleTemplateExport implements FromCollection, WithHeadings
 {
-    // -------------------------------------------------------
-    // Column headers matching the exact import format
-    // -------------------------------------------------------
     public function headings(): array
     {
-        return ['NO', 'NAMA PEMILIKI', 'NO KTP', 'NO-TELP', 'UNIT', 'KAWASAN'];
+        return [
+            'NO',
+            'NAMA PEMILIKI',
+            'NO KTP',
+            'NO-TELP',
+            'UNIT',
+            'CLUSTER',
+            'KAWASAN',
+            'QR ID',
+        ];
     }
 
-    // -------------------------------------------------------
-    // One sample row so the user knows what format to follow
-    // -------------------------------------------------------
     public function collection(): Collection
     {
         return collect([
@@ -28,7 +31,19 @@ class SampleTemplateExport implements FromCollection, WithHeadings
                 'NO KTP'        => '123456789',
                 'NO-TELP'       => '23456789',
                 'UNIT'          => 'A-8',
-                'KAWASAN'       => 'PALACE',
+                'CLUSTER'     => 'TRILIAN',
+                'KAWASAN'       => 'Diamond Palace',
+                'QR ID'         => '',
+            ],
+            [
+                'NO'            => 2,
+                'NAMA PEMILIKI' => 'HALBERG2',
+                'NO KTP'        => '12345678',
+                'NO-TELP'       => '12345678',
+                'UNIT'          => 'B-7',
+                'CLUSTER'     => '',
+                'KAWASAN'       => 'Diamond Pavilion',
+                'QR ID'         => '',
             ],
         ]);
     }

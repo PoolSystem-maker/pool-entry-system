@@ -54,13 +54,37 @@
             </div>
 
             <div class="form-group">
-                <label>Kawasan <span style="color:var(--danger);">*</span></label>
-                <input type="text" name="kawasan" value="{{ old('kawasan') }}"
-                    placeholder="Contoh: PALACE">
-                @error('kawasan')
+                <label>
+                    Accluster
+                    <span style="color:var(--text-muted); font-weight:400;">
+                        (opsional)
+                    </span>
+                </label>
+                <input type="text" name="cluster" value="{{ old('cluster') }}"
+                    placeholder="Contoh: TRILIAN">
+                <p class="form-hint">Kosongkan jika tidak ada cluster.</p>
+                @error('cluster')
                     <p class="form-error">{{ $message }}</p>
                 @enderror
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Kawasan <span style="color:var(--danger);">*</span></label>
+            <select name="kawasan">
+                <option value="">-- Pilih Kawasan --</option>
+                <option value="Diamond Palace"
+                    {{ old('kawasan') === 'Diamond Palace' ? 'selected' : '' }}>
+                    Diamond Palace
+                </option>
+                <option value="Diamond Pavilion"
+                    {{ old('kawasan') === 'Diamond Pavilion' ? 'selected' : '' }}>
+                    Diamond Pavilion
+                </option>
+            </select>
+            @error('kawasan')
+                <p class="form-error">{{ $message }}</p>
+            @enderror
         </div>
 
         <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2);

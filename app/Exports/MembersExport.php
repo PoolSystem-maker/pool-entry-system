@@ -8,10 +8,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class MembersExport implements FromCollection, WithHeadings
 {
-    // -------------------------------------------------------
-    // Column headers in the Excel file
-    // Matches the import format + QR ID for backup/restore
-    // -------------------------------------------------------
     public function headings(): array
     {
         return [
@@ -20,16 +16,12 @@ class MembersExport implements FromCollection, WithHeadings
             'NO KTP',
             'NO-TELP',
             'UNIT',
+            'CLUSTER',
             'KAWASAN',
             'QR ID',
         ];
     }
 
-    // -------------------------------------------------------
-    // One row per member including their QR token
-    // So if the database is ever restored from this file,
-    // all printed cards will still work with the same QR codes
-    // -------------------------------------------------------
     public function collection()
     {
         return Member::orderBy('nama')->get()->map(function ($member, $index) {
@@ -39,6 +31,7 @@ class MembersExport implements FromCollection, WithHeadings
                 'NO KTP'        => $member->no_ktp,
                 'NO-TELP'       => $member->no_telp,
                 'UNIT'          => $member->unit,
+                'CLUSTER'     => $member->cluster ?? '',
                 'KAWASAN'       => $member->kawasan,
                 'QR ID'         => $member->qr_token,
             ];

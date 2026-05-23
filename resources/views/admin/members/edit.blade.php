@@ -59,14 +59,39 @@
             </div>
 
             <div class="form-group">
-                <label>Kawasan <span style="color:var(--danger);">*</span></label>
-                <input type="text" name="kawasan"
-                    value="{{ old('kawasan', $member->kawasan) }}"
-                    placeholder="Contoh: PALACE">
-                @error('kawasan')
+                <label>
+                    Accluster
+                    <span style="color:var(--text-muted); font-weight:400;">
+                        (opsional)
+                    </span>
+                </label>
+                <input type="text" name="cluster"
+                    value="{{ old('cluster', $member->cluster) }}"
+                    placeholder="Contoh: TRILIAN">
+                <p class="form-hint">Kosongkan jika tidak ada cluster.</p>
+                @error('cluster')
                     <p class="form-error">{{ $message }}</p>
                 @enderror
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Kawasan <span style="color:var(--danger);">*</span></label>
+            <select name="kawasan">
+                <option value="Diamond Palace"
+                    {{ old('kawasan', $member->kawasan) === 'Diamond Palace'
+                        ? 'selected' : '' }}>
+                    Diamond Palace
+                </option>
+                <option value="Diamond Pavilion"
+                    {{ old('kawasan', $member->kawasan) === 'Diamond Pavilion'
+                        ? 'selected' : '' }}>
+                    Diamond Pavilion
+                </option>
+            </select>
+            @error('kawasan')
+                <p class="form-error">{{ $message }}</p>
+            @enderror
         </div>
 
         <div class="form-group">
@@ -82,7 +107,6 @@
             @enderror
         </div>
 
-        {{-- Is Active --}}
         <div class="form-group">
             <label>Status Member</label>
             <div style="display:flex; align-items:center; gap:10px;
@@ -91,7 +115,8 @@
                 <input type="hidden" name="is_active" value="0">
                 <input type="checkbox" name="is_active" value="1" id="is_active"
                     {{ old('is_active', $member->is_active) ? 'checked' : '' }}
-                    style="width:18px; height:18px; cursor:pointer; accent-color:var(--accent2);">
+                    style="width:18px; height:18px; cursor:pointer;
+                        accent-color:var(--accent2);">
                 <label for="is_active"
                     style="color:var(--text); font-size:14px;
                         font-weight:500; cursor:pointer; margin:0;">
@@ -100,7 +125,6 @@
             </div>
         </div>
 
-        {{-- Member info strip --}}
         <div style="background:var(--navy); border:1px solid var(--border);
             border-radius:8px; padding:12px 16px; margin-bottom:20px;">
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:4px;">
