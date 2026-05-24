@@ -266,14 +266,21 @@ class MemberController extends Controller
     // -------------------------------------------------------
     public function downloadQr(Member $member)
     {
-        $qrCode = QrCode::format('svg')
-            ->size(300)
-            ->margin(2)
+        $qrSvg = QrCode::format('svg')
+            ->size(150)
             ->generate($member->qr_token);
 
-        return response($qrCode, 200, [
+        $cardSvg = $member->kawasan === 'Diamond Pavilion'
+            ? $this->buildPavilionCardSvg($member, $qrSvg)
+            : $this->buildCardSvg($member, $qrSvg);
+
+        $filename = $member->unit
+            . ($member->cluster ? '-' . $member->cluster : '')
+            . '-' . $member->kawasan . '.svg';
+
+        return response($cardSvg, 200, [
             'Content-Type'        => 'image/svg+xml',
-            'Content-Disposition' => 'attachment; filename="qr-' . $member->unit . '.svg"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 
