@@ -35,25 +35,19 @@
             gap: 24px;
         }
 
-        /* ── HEADER ── */
-        .header {
-            text-align: center;
-        }
-
+        .header { text-align: center; }
         .header h1 {
             font-size: 22px;
             font-weight: 800;
             color: var(--text);
             letter-spacing: -0.3px;
         }
-
         .header p {
             color: var(--text-muted);
             font-size: 13px;
             margin-top: 4px;
         }
 
-        /* ── SCANNER BOX ── */
         .scanner-wrap {
             position: relative;
             border-radius: 20px;
@@ -63,11 +57,8 @@
                         0 20px 60px rgba(0,0,0,0.5);
         }
 
-        .scanner-wrap video {
-            display: block;
-        }
+        .scanner-wrap video { display: block; }
 
-        /* Corner guides */
         .corner {
             position: absolute;
             width: 28px;
@@ -75,47 +66,40 @@
             z-index: 2;
         }
 
-        .corner-tl { top: 12px;    left: 12px;
-            border-top: 3px solid var(--accent);
-            border-left: 3px solid var(--accent);
-            border-radius: 4px 0 0 0; }
+        .corner-tl { top:12px; left:12px;
+            border-top:3px solid var(--accent);
+            border-left:3px solid var(--accent);
+            border-radius:4px 0 0 0; }
+        .corner-tr { top:12px; right:12px;
+            border-top:3px solid var(--accent);
+            border-right:3px solid var(--accent);
+            border-radius:0 4px 0 0; }
+        .corner-bl { bottom:12px; left:12px;
+            border-bottom:3px solid var(--accent);
+            border-left:3px solid var(--accent);
+            border-radius:0 0 0 4px; }
+        .corner-br { bottom:12px; right:12px;
+            border-bottom:3px solid var(--accent);
+            border-right:3px solid var(--accent);
+            border-radius:0 0 4px 0; }
 
-        .corner-tr { top: 12px;    right: 12px;
-            border-top: 3px solid var(--accent);
-            border-right: 3px solid var(--accent);
-            border-radius: 0 4px 0 0; }
-
-        .corner-bl { bottom: 12px; left: 12px;
-            border-bottom: 3px solid var(--accent);
-            border-left: 3px solid var(--accent);
-            border-radius: 0 0 0 4px; }
-
-        .corner-br { bottom: 12px; right: 12px;
-            border-bottom: 3px solid var(--accent);
-            border-right: 3px solid var(--accent);
-            border-radius: 0 0 4px 0; }
-
-        /* Scan line animation */
         .scan-line {
             position: absolute;
-            left: 16px;
-            right: 16px;
+            left: 16px; right: 16px;
             height: 2px;
-            background: linear-gradient(90deg,
-                transparent, var(--accent), transparent);
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
             border-radius: 999px;
             z-index: 2;
             animation: scanline 2s ease-in-out infinite;
         }
 
         @keyframes scanline {
-            0%   { top: 16px;   opacity: 0; }
+            0%   { top: 16px; opacity: 0; }
             10%  { opacity: 1; }
             90%  { opacity: 1; }
             100% { top: calc(100% - 16px); opacity: 0; }
         }
 
-        /* ── STATUS PILL ── */
         .status-pill {
             background: var(--navy-mid);
             border: 1px solid var(--border);
@@ -129,29 +113,25 @@
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             border-radius: 50%;
             background: var(--accent);
             animation: pulse 1.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.4; transform: scale(0.8); }
+            0%, 100% { opacity:1; transform:scale(1); }
+            50%       { opacity:0.4; transform:scale(0.8); }
         }
 
-        /* ── ADMIN LINK ── */
         .admin-link {
             color: var(--text-muted);
             font-size: 12px;
             text-decoration: none;
             transition: color 0.2s;
         }
-
         .admin-link:hover { color: var(--accent); }
 
-        /* ── POPUP ── */
         .popup-backdrop {
             display: none;
             position: fixed;
@@ -178,47 +158,20 @@
         }
 
         @keyframes popIn {
-            from { transform: scale(0.92); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
+            from { transform:scale(0.92); opacity:0; }
+            to   { transform:scale(1);   opacity:1; }
         }
 
-        .popup-icon {
-            font-size: 64px;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-
-        .popup-title {
-            font-size: 22px;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: 0.5px;
-            text-align: center;
-        }
-
-        .popup-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: #fff;
-            text-align: center;
-        }
-
-        .popup-sub {
-            font-size: 14px;
-            color: rgba(255,255,255,0.75);
-            text-align: center;
-            line-height: 1.6;
-        }
-
-        .popup-extra {
-            background: rgba(255,255,255,0.2);
-            border-radius: 999px;
-            padding: 8px 22px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            margin-top: 4px;
-        }
+        .popup-icon  { font-size:64px; line-height:1; margin-bottom:4px; }
+        .popup-title { font-size:22px; font-weight:800; color:#fff;
+            letter-spacing:0.5px; text-align:center; }
+        .popup-name  { font-size:20px; font-weight:700; color:#fff;
+            text-align:center; }
+        .popup-sub   { font-size:14px; color:rgba(255,255,255,0.75);
+            text-align:center; line-height:1.6; }
+        .popup-extra { background:rgba(255,255,255,0.2); border-radius:999px;
+            padding:8px 22px; font-size:14px; font-weight:600;
+            color:#fff; margin-top:4px; }
 
         .popup-btn {
             margin-top: 8px;
@@ -233,19 +186,17 @@
             transition: all 0.2s;
             letter-spacing: 0.3px;
         }
-
         .popup-btn:hover {
             background: rgba(255,255,255,0.3);
             border-color: rgba(255,255,255,0.5);
         }
 
-        /* ── MOBILE ── */
         @media (max-width: 480px) {
-            body { padding: 20px 16px; gap: 20px; }
-            .header h1 { font-size: 20px; }
-            .popup-card { padding: 32px 24px; }
-            .popup-title { font-size: 20px; }
-            .popup-name  { font-size: 18px; }
+            body { padding:20px 16px; gap:20px; }
+            .header h1 { font-size:20px; }
+            .popup-card { padding:32px 24px; }
+            .popup-title { font-size:20px; }
+            .popup-name  { font-size:18px; }
         }
     </style>
 </head>
@@ -370,16 +321,32 @@
 
             if (isGranted) {
                 document.getElementById('popup-name').textContent = data.member.nama;
-                document.getElementById('popup-sub').textContent  =
-                    'Unit ' + data.member.unit + ' · ' + data.member.kawasan;
+
+                // Build unit line — include cluster if present
+                let unitLine = 'Unit ' + data.member.unit;
+                if (data.member.cluster) {
+                    unitLine += ' (' + data.member.cluster + ')';
+                }
+                unitLine += ' · ' + data.member.kawasan;
+                document.getElementById('popup-sub').textContent = unitLine;
+
                 const extra = document.getElementById('popup-extra');
-                extra.textContent = 'Sisa akses hari ini: ' + data.remaining;
+                extra.textContent  = 'Sisa akses hari ini: ' + data.remaining;
                 extra.style.display = 'block';
             } else {
                 document.getElementById('popup-name').textContent = data.reason;
-                document.getElementById('popup-sub').textContent  = data.member
-                    ? 'Unit ' + data.member.unit + ' · ' + data.member.kawasan
-                    : '';
+
+                if (data.member) {
+                    let unitLine = 'Unit ' + data.member.unit;
+                    if (data.member.cluster) {
+                        unitLine += ' (' + data.member.cluster + ')';
+                    }
+                    unitLine += ' · ' + data.member.kawasan;
+                    document.getElementById('popup-sub').textContent = unitLine;
+                } else {
+                    document.getElementById('popup-sub').textContent = '';
+                }
+
                 document.getElementById('popup-extra').style.display = 'none';
             }
 
