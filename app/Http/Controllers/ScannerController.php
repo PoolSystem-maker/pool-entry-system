@@ -18,28 +18,31 @@ class ScannerController extends Controller
 
     // -------------------------------------------------------
     // Called via AJAX when the scanner detects a QR code
-    // Checks in this exact order:
-    // 1. Does the QR token exist?
-    // 2. Is the member active?
-    // 3. Has the member used fewer than daily_limit granted scans today?
     // -------------------------------------------------------
     public function scan(Request $request)
     {
         $token = $request->input('token');
 
-        // CHECK 1 — Does this QR token exist in the database?
+        // CHECK 1 — Does this QR token exist?
         $member = Member::where('qr_token', $token)->first();
 
         if (!$member) {
             return response()->json([
-                'status'  => 'denied',
-                'reason'  => 'QR code tidak dikenali.',
+                'status' => 'denied',
+                'reason' => 'QR code tidak dikenali.',
             ]);
         }
 
+        // Helper to build member info array including cluster
+        $memberInfo = [
+            'nama'    => $member->nama,
+            'unit'    => $member->unit,
+            'cluster' => $member->cluster,
+            'kawasan' => $member->kawasan,
+        ];
+
         // CHECK 2 — Is the member active?
         if (!$member->is_active) {
-            // Log the denied attempt
             EntryLog::create([
                 'member_id'   => $member->id,
                 'gate_name'   => 'Main Gate',
@@ -49,13 +52,9 @@ class ScannerController extends Controller
             ]);
 
             return response()->json([
-                'status'  => 'denied',
-                'reason'  => 'Member tidak aktif.',
-                'member'  => [
-                    'nama'    => $member->nama,
-                    'unit'    => $member->unit,
-                    'kawasan' => $member->kawasan,
-                ],
+                'status' => 'denied',
+                'reason' => 'Member tidak aktif.',
+                'member' => $memberInfo,
             ]);
         }
 
@@ -63,7 +62,6 @@ class ScannerController extends Controller
         if (!$member->canEnterToday()) {
             $limit = $member->todayLimit();
 
-            // Log the denied attempt
             EntryLog::create([
                 'member_id'   => $member->id,
                 'gate_name'   => 'Main Gate',
@@ -73,13 +71,9 @@ class ScannerController extends Controller
             ]);
 
             return response()->json([
-                'status'  => 'denied',
-                'reason'  => "Batas akses harian telah tercapai. ({$limit}/{$limit})",
-                'member'  => [
-                    'nama'    => $member->nama,
-                    'unit'    => $member->unit,
-                    'kawasan' => $member->kawasan,
-                ],
+                'status' => 'denied',
+                'reason' => "Batas akses harian telah tercapai. ({$limit}/{$limit})",
+                'member' => $memberInfo,
             ]);
         }
 
@@ -92,17 +86,12 @@ class ScannerController extends Controller
             'scanned_at'  => now(),
         ]);
 
-        // Refresh the model so todayGrantedCount() reflects the new log we just created
         $member->refresh();
         $remaining = $member->remainingEntriesToday();
 
         return response()->json([
-            'status'  => 'granted',
-            'member'  => [
-                'nama'      => $member->nama,
-                'unit'      => $member->unit,
-                'kawasan'   => $member->kawasan,
-            ],
+            'status'    => 'granted',
+            'member'    => $memberInfo,
             'remaining' => max(0, $remaining),
         ]);
     }
