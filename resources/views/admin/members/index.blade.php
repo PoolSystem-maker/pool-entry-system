@@ -86,9 +86,13 @@
         <p class="page-subtitle">{{ $members->total() }} member terdaftar</p>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a href="{{ route('admin.members.downloadAllCards') }}"
-            class="btn" style="background:#7c3aed; color:#fff;">
-            ⬇ Download All Cards (ZIP)
+        <a href="{{ route('admin.members.downloadPalaceCards') }}"
+            class="btn" style="background:#1d4ed8; color:#fff;">
+            ⬇ Palace Cards
+        </a>
+        <a href="{{ route('admin.members.downloadPavilionCards') }}"
+            class="btn" style="background:#16a34a; color:#fff;">
+            ⬇ Pavilion Cards
         </a>
         <a href="{{ route('admin.members.create') }}" class="btn btn-primary">
             + Tambah Member

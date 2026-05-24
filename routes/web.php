@@ -28,8 +28,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/members/export', [MemberController::class, 'export'])->name('members.export');
     Route::get('/members/sample-template', [MemberController::class, 'sampleTemplate'])->name('members.sampleTemplate');
     Route::get('/members/print-all-cards', [MemberController::class, 'printAllCards'])->name('members.printAllCards');
-    Route::get('/members/download-all-cards', [MemberController::class, 'downloadAllCards'])->name('members.downloadAllCards');
-    Route::post('/members/import', [MemberController::class, 'import'])->name('members.import');
+    Route::get('/members/download-all-cards/palace', [MemberController::class, 'downloadPalaceCards'])->name('members.downloadPalaceCards');
+    Route::get('/members/download-all-cards/pavilion', [MemberController::class, 'downloadPavilionCards'])->name('members.downloadPavilionCards');    Route::post('/members/import', [MemberController::class, 'import'])->name('members.import');
     Route::post('/members/clear-import-session', [MemberController::class, 'clearImportSession'])->name('members.clearImportSession');
 
     // Members — full CRUD

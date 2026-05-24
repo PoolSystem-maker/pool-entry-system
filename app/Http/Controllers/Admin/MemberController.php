@@ -237,18 +237,22 @@ class MemberController extends Controller
     // -------------------------------------------------------
     // Show the print-ready ID card page for a member
     // -------------------------------------------------------
-// -------------------------------------------------------
-// Download a single member card as SVG
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // Download a single member card as SVG
+    // -------------------------------------------------------
     public function printCard(Member $member)
     {
         $qrSvg = QrCode::format('svg')
             ->size(150)
             ->generate($member->qr_token);
 
-        $cardSvg = $this->buildCardSvg($member, $qrSvg);
+        $cardSvg = $member->kawasan === 'Diamond Pavilion'
+            ? $this->buildPavilionCardSvg($member, $qrSvg)
+            : $this->buildCardSvg($member, $qrSvg);
 
-        $filename = $member->unit . '-' . $member->kawasan . '.svg';
+        $filename = $member->unit
+            . ($member->cluster ? '-' . $member->cluster : '')
+            . '-' . $member->kawasan . '.svg';
 
         return response($cardSvg, 200, [
             'Content-Type'        => 'image/svg+xml',
@@ -317,17 +321,34 @@ class MemberController extends Controller
     }
 
     // -------------------------------------------------------
-    // Download all member QR cards as a ZIP of SVG files
-    // Each file named by unit-kawasan
+    // Download all Diamond Palace cards as ZIP
     // -------------------------------------------------------
-    public function downloadAllCards()
+    public function downloadPalaceCards()
     {
-        $members = Member::orderBy('kawasan')->orderBy('nama')->get();
+        $members = Member::where('kawasan', 'Diamond Palace')
+            ->orderBy('nama')->get();
 
-        // Create a temporary ZIP file
+        return $this->buildZip($members, 'diamond-palace-cards.zip');
+    }
+
+    // -------------------------------------------------------
+    // Download all Diamond Pavilion cards as ZIP
+    // -------------------------------------------------------
+    public function downloadPavilionCards()
+    {
+        $members = Member::where('kawasan', 'Diamond Pavilion')
+            ->orderBy('nama')->get();
+
+        return $this->buildZip($members, 'diamond-pavilion-cards.zip');
+    }
+
+    // -------------------------------------------------------
+    // Build a ZIP file of SVG cards for a collection of members
+    // -------------------------------------------------------
+    private function buildZip($members, string $zipFilename)
+    {
         $zipPath = storage_path('app/temp-cards.zip');
 
-        // Delete old temp file if exists
         if (file_exists($zipPath)) {
             unlink($zipPath);
         }
@@ -336,34 +357,33 @@ class MemberController extends Controller
         $zip->open($zipPath, \ZipArchive::CREATE);
 
         foreach ($members as $member) {
-            // Generate SVG card for this member
             $qrSvg = QrCode::format('svg')
                 ->size(150)
                 ->generate($member->qr_token);
 
-            // Build a self-contained SVG card (CR80 size: 85.6mm x 54mm)
-            $cardSvg = $this->buildCardSvg($member, $qrSvg);
+            $cardSvg = $member->kawasan === 'Diamond Pavilion'
+                ? $this->buildPavilionCardSvg($member, $qrSvg)
+                : $this->buildCardSvg($member, $qrSvg);
 
-            // Filename: unit-kawasan.svg e.g. "A-8-PALACE.svg"
-            $filename = $member->unit . '-' . $member->kawasan . '.svg';
+            $filename = $member->unit
+                . ($member->cluster ? '-' . $member->cluster : '')
+                . '-' . $member->kawasan . '.svg';
 
             $zip->addFromString($filename, $cardSvg);
         }
 
         $zip->close();
 
-        return response()->download($zipPath, 'all-member-cards.zip', [
+        return response()->download($zipPath, $zipFilename, [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
     }
 
     // -------------------------------------------------------
-    // Build a self-contained SVG card for one member
-    // CR80 size: 323px x 204px (85.6mm x 54mm at 96dpi)
+    // Build SVG card for Diamond Palace (blue)
     // -------------------------------------------------------
     private function buildCardSvg(Member $member, string $qrSvg): string
     {
-        // Strip XML declaration and outer SVG tags from QR code
         $qrInner = preg_replace('/<\?xml[^>]*\?>\s*/i', '', $qrSvg);
         $qrInner = preg_replace('/<svg[^>]*>/i', '', $qrInner);
         $qrInner = str_replace('</svg>', '', $qrInner);
@@ -374,9 +394,8 @@ class MemberController extends Controller
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $id      = $member->id;
 
-        // QR position and size
-        $qrBoxX    = 182;
-        $qrBoxY    = 42;
+        $qrBoxX   = 182;
+        $qrBoxY   = 42;
         $qrBoxSize = 120;
         $qrPadding = 4;
         $qrScale   = ($qrBoxSize - ($qrPadding * 2)) / 150;
@@ -398,56 +417,140 @@ class MemberController extends Controller
         </clipPath>
     </defs>
 
-    <!-- Card background -->
     <rect width="323" height="204" rx="15" fill="url(#cardBg)"/>
 
-    <!-- Decorative circle top-right -->
     <circle cx="290" cy="-10" r="80"
         fill="white" fill-opacity="0.07" clip-path="url(#cardClip)"/>
-
-    <!-- Decorative circle bottom-left -->
     <circle cx="70" cy="180" r="55"
         fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
 
-    <!-- Top-right label -->
     <text x="302" y="16"
         font-family="Arial,sans-serif" font-size="7"
         fill="rgba(255,255,255,0.5)" letter-spacing="1"
         text-anchor="end">POOL ENTRY PASS</text>
 
-    <!-- Left: POOL ENTRY PASS small label -->
     <text x="19" y="50"
         font-family="Arial,sans-serif" font-size="7"
         fill="rgba(255,255,255,0.7)" letter-spacing="1">
         POOL ENTRY PASS
     </text>
 
-    <!-- Left: Member name -->
     <text x="19" y="77"
         font-family="Arial,sans-serif" font-size="19"
         font-weight="bold" fill="white">{$nama}</text>
 
-    <!-- Left: Unit -->
     <text x="19" y="100"
         font-family="Arial,sans-serif" font-size="14"
         font-weight="600" fill="#bfdbfe">Unit {$unit}</text>
 
-    <!-- Left: Kawasan -->
     <text x="19" y="120"
         font-family="Arial,sans-serif" font-size="11"
         fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
 
-    <!-- Left: ID — right below kawasan -->
     <text x="19" y="138"
         font-family="monospace,Arial" font-size="9"
         fill="rgba(255,255,255,0.5)">ID #{$id}</text>
 
-    <!-- QR white background box -->
     <rect x="{$qrBoxX}" y="{$qrBoxY}"
         width="{$qrBoxSize}" height="{$qrBoxSize}"
         rx="8" fill="white"/>
 
-    <!-- QR code content -->
+    <g transform="translate({$qrInnerX}, {$qrInnerY}) scale({$qrScale})">
+        {$qrInner}
+    </g>
+
+    </svg>
+    SVG;
+    }
+
+    // -------------------------------------------------------
+    // Build SVG card for Diamond Pavilion (green, with cluster)
+    // -------------------------------------------------------
+    private function buildPavilionCardSvg(Member $member, string $qrSvg): string
+    {
+        $qrInner = preg_replace('/<\?xml[^>]*\?>\s*/i', '', $qrSvg);
+        $qrInner = preg_replace('/<svg[^>]*>/i', '', $qrInner);
+        $qrInner = str_replace('</svg>', '', $qrInner);
+        $qrInner = trim($qrInner);
+
+        $nama    = htmlspecialchars($member->nama,    ENT_XML1, 'UTF-8');
+        $unit    = htmlspecialchars($member->unit,    ENT_XML1, 'UTF-8');
+        $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
+        $cluster = htmlspecialchars($member->cluster ?? '', ENT_XML1, 'UTF-8');
+        $id      = $member->id;
+
+        $qrBoxX    = 182;
+        $qrBoxY    = 42;
+        $qrBoxSize = 120;
+        $qrPadding = 4;
+        $qrScale   = ($qrBoxSize - ($qrPadding * 2)) / 150;
+        $qrInnerX  = $qrBoxX + $qrPadding;
+        $qrInnerY  = $qrBoxY + $qrPadding;
+
+        // Cluster line — only shown if cluster exists
+        $clusterLine = $cluster
+            ? "<text x=\"19\" y=\"138\"
+                font-family=\"Arial,sans-serif\" font-size=\"10\"
+                font-weight=\"600\" fill=\"rgba(255,255,255,0.85)\"
+                letter-spacing=\"0.5\">{$cluster}</text>
+            <text x=\"19\" y=\"155\"
+                font-family=\"monospace,Arial\" font-size=\"9\"
+                fill=\"rgba(255,255,255,0.5)\">ID #{$id}</text>"
+            : "<text x=\"19\" y=\"138\"
+                font-family=\"monospace,Arial\" font-size=\"9\"
+                fill=\"rgba(255,255,255,0.5)\">ID #{$id}</text>";
+
+        return <<<SVG
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="323" height="204" viewBox="0 0 323 204">
+    <defs>
+        <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#14532d"/>
+        <stop offset="60%"  stop-color="#16a34a"/>
+        <stop offset="100%" stop-color="#4ade80"/>
+        </linearGradient>
+        <clipPath id="cardClip">
+        <rect width="323" height="204" rx="15"/>
+        </clipPath>
+    </defs>
+
+    <rect width="323" height="204" rx="15" fill="url(#cardBg)"/>
+
+    <circle cx="290" cy="-10" r="80"
+        fill="white" fill-opacity="0.07" clip-path="url(#cardClip)"/>
+    <circle cx="70" cy="180" r="55"
+        fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
+
+    <text x="302" y="16"
+        font-family="Arial,sans-serif" font-size="7"
+        fill="rgba(255,255,255,0.5)" letter-spacing="1"
+        text-anchor="end">POOL ENTRY PASS</text>
+
+    <text x="19" y="50"
+        font-family="Arial,sans-serif" font-size="7"
+        fill="rgba(255,255,255,0.7)" letter-spacing="1">
+        POOL ENTRY PASS
+    </text>
+
+    <text x="19" y="77"
+        font-family="Arial,sans-serif" font-size="19"
+        font-weight="bold" fill="white">{$nama}</text>
+
+    <text x="19" y="100"
+        font-family="Arial,sans-serif" font-size="14"
+        font-weight="600" fill="#bbf7d0">Unit {$unit}</text>
+
+    <text x="19" y="120"
+        font-family="Arial,sans-serif" font-size="11"
+        fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
+
+    {$clusterLine}
+
+    <rect x="{$qrBoxX}" y="{$qrBoxY}"
+        width="{$qrBoxSize}" height="{$qrBoxSize}"
+        rx="8" fill="white"/>
+
     <g transform="translate({$qrInnerX}, {$qrInnerY}) scale({$qrScale})">
         {$qrInner}
     </g>
