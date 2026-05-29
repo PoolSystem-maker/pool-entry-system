@@ -396,18 +396,34 @@ class MemberController extends Controller
         $qrInner = str_replace('</svg>', '', $qrInner);
         $qrInner = trim($qrInner);
 
-        $nama    = htmlspecialchars($member->nama,    ENT_XML1, 'UTF-8');
         $unit    = htmlspecialchars($member->unit,    ENT_XML1, 'UTF-8');
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $id      = $member->id;
 
-        $qrBoxX   = 182;
-        $qrBoxY   = 42;
+        $qrBoxX    = 182;
+        $qrBoxY    = 42;
         $qrBoxSize = 120;
         $qrPadding = 4;
         $qrScale   = ($qrBoxSize - ($qrPadding * 2)) / 150;
         $qrInnerX  = $qrBoxX + $qrPadding;
         $qrInnerY  = $qrBoxY + $qrPadding;
+
+        // Split name into words and build tspan lines
+        $words    = explode(' ', $member->nama);
+        $nameLines = '';
+        $startY   = 77;
+        $lineHeight = 22;
+        foreach ($words as $i => $word) {
+            $word = htmlspecialchars($word, ENT_XML1, 'UTF-8');
+            $y    = $startY + ($i * $lineHeight);
+            $nameLines .= "<tspan x=\"19\" dy=\"0\" y=\"{$y}\">{$word}</tspan>";
+        }
+
+        // How far down did the name go
+        $nameBottom = $startY + (count($words) - 1) * $lineHeight;
+        $unitY      = $nameBottom + 24;
+        $kawasanY   = $unitY + 20;
+        $idY        = $kawasanY + 18;
 
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
@@ -431,37 +447,44 @@ class MemberController extends Controller
     <circle cx="70" cy="180" r="55"
         fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
 
+    <!-- Top-right label -->
     <text x="302" y="16"
         font-family="Arial,sans-serif" font-size="7"
-        fill="rgba(255,255,255,0.5)" letter-spacing="1"
+        fill="white" fill-opacity="0.5" letter-spacing="1"
         text-anchor="end">POOL ENTRY PASS</text>
 
+    <!-- Top-left label -->
     <text x="19" y="50"
         font-family="Arial,sans-serif" font-size="7"
-        fill="rgba(255,255,255,0.7)" letter-spacing="1">
-        POOL ENTRY PASS
+        fill="white" fill-opacity="0.7" letter-spacing="1">POOL ENTRY PASS</text>
+
+    <!-- Member name — one word per line -->
+    <text font-family="Arial,sans-serif" font-size="19"
+        font-weight="bold" fill="white">
+        {$nameLines}
     </text>
 
-    <text x="19" y="77"
-        font-family="Arial,sans-serif" font-size="19"
-        font-weight="bold" fill="white">{$nama}</text>
-
-    <text x="19" y="100"
+    <!-- Unit -->
+    <text x="19" y="{$unitY}"
         font-family="Arial,sans-serif" font-size="14"
         font-weight="600" fill="#bfdbfe">Unit {$unit}</text>
 
-    <text x="19" y="120"
+    <!-- Kawasan -->
+    <text x="19" y="{$kawasanY}"
         font-family="Arial,sans-serif" font-size="11"
-        fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
+        fill="white" fill-opacity="0.7" letter-spacing="0.5">{$kawasan}</text>
 
-    <text x="19" y="138"
+    <!-- ID -->
+    <text x="19" y="{$idY}"
         font-family="monospace,Arial" font-size="9"
-        fill="rgba(255,255,255,0.5)">ID #{$id}</text>
+        fill="white" fill-opacity="0.5">ID #{$id}</text>
 
+    <!-- QR white background box -->
     <rect x="{$qrBoxX}" y="{$qrBoxY}"
         width="{$qrBoxSize}" height="{$qrBoxSize}"
         rx="8" fill="white"/>
 
+    <!-- QR code content -->
     <g transform="translate({$qrInnerX}, {$qrInnerY}) scale({$qrScale})">
         {$qrInner}
     </g>
@@ -480,7 +503,6 @@ class MemberController extends Controller
         $qrInner = str_replace('</svg>', '', $qrInner);
         $qrInner = trim($qrInner);
 
-        $nama    = htmlspecialchars($member->nama,    ENT_XML1, 'UTF-8');
         $unit    = htmlspecialchars($member->unit,    ENT_XML1, 'UTF-8');
         $kawasan = htmlspecialchars($member->kawasan, ENT_XML1, 'UTF-8');
         $cluster = htmlspecialchars($member->cluster ?? '', ENT_XML1, 'UTF-8');
@@ -494,18 +516,29 @@ class MemberController extends Controller
         $qrInnerX  = $qrBoxX + $qrPadding;
         $qrInnerY  = $qrBoxY + $qrPadding;
 
-        // Cluster line — only shown if cluster exists
+        // Split name into words — one per line
+        $words      = explode(' ', $member->nama);
+        $nameLines  = '';
+        $startY     = 77;
+        $lineHeight = 22;
+        foreach ($words as $i => $word) {
+            $word = htmlspecialchars($word, ENT_XML1, 'UTF-8');
+            $y    = $startY + ($i * $lineHeight);
+            $nameLines .= "<tspan x=\"19\" dy=\"0\" y=\"{$y}\">{$word}</tspan>";
+        }
+
+        $nameBottom = $startY + (count($words) - 1) * $lineHeight;
+        $unitY      = $nameBottom + 24;
+        $kawasanY   = $unitY + 20;
+        $clusterY   = $kawasanY + 18;
+        $idY        = $cluster ? $clusterY + 16 : $clusterY;
+
         $clusterLine = $cluster
-            ? "<text x=\"19\" y=\"138\"
+            ? "<text x=\"19\" y=\"{$clusterY}\"
                 font-family=\"Arial,sans-serif\" font-size=\"10\"
-                font-weight=\"600\" fill=\"rgba(255,255,255,0.85)\"
-                letter-spacing=\"0.5\">{$cluster}</text>
-            <text x=\"19\" y=\"155\"
-                font-family=\"monospace,Arial\" font-size=\"9\"
-                fill=\"rgba(255,255,255,0.5)\">ID #{$id}</text>"
-            : "<text x=\"19\" y=\"138\"
-                font-family=\"monospace,Arial\" font-size=\"9\"
-                fill=\"rgba(255,255,255,0.5)\">ID #{$id}</text>";
+                font-weight=\"600\" fill=\"white\" fill-opacity=\"0.9\"
+                letter-spacing=\"0.5\">{$cluster}</text>"
+            : '';
 
         return <<<SVG
     <?xml version="1.0" encoding="UTF-8"?>
@@ -529,35 +562,47 @@ class MemberController extends Controller
     <circle cx="70" cy="180" r="55"
         fill="white" fill-opacity="0.05" clip-path="url(#cardClip)"/>
 
+    <!-- Top-right label -->
     <text x="302" y="16"
         font-family="Arial,sans-serif" font-size="7"
-        fill="rgba(255,255,255,0.5)" letter-spacing="1"
+        fill="white" fill-opacity="0.5" letter-spacing="1"
         text-anchor="end">POOL ENTRY PASS</text>
 
+    <!-- Top-left label -->
     <text x="19" y="50"
         font-family="Arial,sans-serif" font-size="7"
-        fill="rgba(255,255,255,0.7)" letter-spacing="1">
-        POOL ENTRY PASS
+        fill="white" fill-opacity="0.7" letter-spacing="1">POOL ENTRY PASS</text>
+
+    <!-- Member name — one word per line -->
+    <text font-family="Arial,sans-serif" font-size="19"
+        font-weight="bold" fill="white">
+        {$nameLines}
     </text>
 
-    <text x="19" y="77"
-        font-family="Arial,sans-serif" font-size="19"
-        font-weight="bold" fill="white">{$nama}</text>
-
-    <text x="19" y="100"
+    <!-- Unit -->
+    <text x="19" y="{$unitY}"
         font-family="Arial,sans-serif" font-size="14"
         font-weight="600" fill="#bbf7d0">Unit {$unit}</text>
 
-    <text x="19" y="120"
+    <!-- Kawasan -->
+    <text x="19" y="{$kawasanY}"
         font-family="Arial,sans-serif" font-size="11"
-        fill="rgba(255,255,255,0.7)" letter-spacing="0.5">{$kawasan}</text>
+        fill="white" fill-opacity="0.7" letter-spacing="0.5">{$kawasan}</text>
 
+    <!-- Cluster (if present) -->
     {$clusterLine}
 
+    <!-- ID -->
+    <text x="19" y="{$idY}"
+        font-family="monospace,Arial" font-size="9"
+        fill="white" fill-opacity="0.5">ID #{$id}</text>
+
+    <!-- QR white background box -->
     <rect x="{$qrBoxX}" y="{$qrBoxY}"
         width="{$qrBoxSize}" height="{$qrBoxSize}"
         rx="8" fill="white"/>
 
+    <!-- QR code content -->
     <g transform="translate({$qrInnerX}, {$qrInnerY}) scale({$qrScale})">
         {$qrInner}
     </g>
