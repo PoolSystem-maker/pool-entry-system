@@ -15,7 +15,6 @@ class MonthlyLogController extends Controller
         $month = $request->input('month', now()->month);
         $year  = $request->input('year',  now()->year);
 
-        // Now shows ALL entries — both granted and denied
         $logs = EntryLog::with('member')
             ->whereMonth('scanned_at', $month)
             ->whereYear('scanned_at', $year)
@@ -36,5 +35,23 @@ class MonthlyLogController extends Controller
         $filename = "monthly-log-{$year}-{$month}.xlsx";
 
         return Excel::download(new MonthlyLogExport($month, $year), $filename);
+    }
+
+    // -------------------------------------------------------
+    // Daily export — printable PDF page for a specific date
+    // -------------------------------------------------------
+    public function dailyExport(Request $request)
+    {
+        $date = $request->input('date'); // format: Y-m-d
+
+        $logs = EntryLog::with('member')
+            ->whereDate('scanned_at', $date)
+            ->orderBy('scanned_at', 'asc')
+            ->get();
+
+        $parsedDate = \Carbon\Carbon::parse($date);
+
+        return view('admin.monthly-logs.daily-export',
+            compact('logs', 'date', 'parsedDate'));
     }
 }

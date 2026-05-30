@@ -101,11 +101,12 @@
 
         {{-- Day header --}}
         <div style="background:var(--navy-soft); padding:12px 16px;
-            display:flex; justify-content:space-between; align-items:center;">
+            display:flex; justify-content:space-between; align-items:center;
+            flex-wrap:wrap; gap:8px;">
             <h2 style="font-size:14px; font-weight:700; color:var(--text);">
                 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
             </h2>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <span class="badge badge-green">
                     {{ $dayLogs->where('status','granted')->count() }} granted
                 </span>
@@ -114,6 +115,13 @@
                         {{ $dayLogs->where('status','denied')->count() }} denied
                     </span>
                 @endif
+                <a href="{{ route('admin.monthly-logs.dailyExport', ['date' => $date]) }}"
+                    target="_blank"
+                    style="background:#1d4ed8; color:white; padding:4px 12px;
+                        border-radius:6px; font-size:11px; font-weight:600;
+                        text-decoration:none;">
+                    🖨️ Export Harian
+                </a>
             </div>
         </div>
 

@@ -54,6 +54,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Monthly logs
     Route::get('/monthly-logs', [MonthlyLogController::class, 'index'])->name('monthly-logs.index');
     Route::get('/monthly-logs/export', [MonthlyLogController::class, 'export'])->name('monthly-logs.export');
+    Route::get('/monthly-logs/daily-export', [MonthlyLogController::class, 'dailyExport'])->name('monthly-logs.dailyExport');
 });
 
 // Breeze auth routes (login, logout, register etc.)
