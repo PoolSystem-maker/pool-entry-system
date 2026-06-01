@@ -87,11 +87,19 @@
             @enderror
         </div>
 
-        <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2);
-            border-radius:8px; padding:12px 16px; margin-bottom:20px;">
-            <p style="color:var(--accent); font-size:13px;">
-                🔑 QR code akan digenerate otomatis setelah member disimpan.
+        <div class="form-group">
+            <label>
+                QR ID
+                <span style="color:var(--text-muted); font-weight:400;">(opsional)</span>
+            </label>
+            <input type="text" name="qr_token" value="{{ old('qr_token') }}"
+                placeholder="Kosongkan untuk generate otomatis">
+            <p class="form-hint">
+                Isi hanya jika member sudah punya QR card sebelumnya dan ingin mempertahankan QR yang sama.
             </p>
+            @error('qr_token')
+                <p class="form-error">{{ $message }}</p>
+            @enderror
         </div>
 
         <div style="display:flex; gap:10px;">

@@ -49,12 +49,13 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'    => 'required|string|max:255|unique:members,nama',
-            'no_ktp'  => 'required|string',
-            'no_telp' => 'required|string|max:20',
-            'cluster' => 'nullable|string|max:100',
-            'kawasan' => 'required|in:Diamond Palace,Diamond Pavilion',
-            'unit'    => 'required|string|max:50',
+            'nama'      => 'required|string|max:255|unique:members,nama',
+            'no_ktp'    => 'required|string',
+            'no_telp'   => 'required|string|max:20',
+            'cluster'   => 'nullable|string|max:100',
+            'kawasan'   => 'required|in:Diamond Palace,Diamond Pavilion',
+            'unit'      => 'required|string|max:50',
+            'qr_token'  => 'nullable|string|unique:members,qr_token',
         ]);
 
         $exists = Member::where('unit', $request->unit)
@@ -76,9 +77,15 @@ class MemberController extends Controller
             ])->withInput();
         }
 
-        Member::create($request->only([
-            'nama', 'no_ktp', 'no_telp', 'unit', 'cluster', 'kawasan'
-        ]));
+        Member::create([
+            'nama'      => $request->nama,
+            'no_ktp'    => $request->no_ktp,
+            'no_telp'   => $request->no_telp,
+            'unit'      => $request->unit,
+            'cluster'   => $request->cluster ?: null,
+            'kawasan'   => $request->kawasan,
+            'qr_token'  => $request->qr_token ?: null,
+        ]);
 
         return redirect()->route('admin.members.index')
             ->with('success', 'Member berhasil ditambahkan.');
@@ -385,6 +392,16 @@ class MemberController extends Controller
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
     }
+
+    // -------------------------------------------------------
+    // Clear the import skipped rows from the session
+    // -------------------------------------------------------
+    public function clearImportSession()
+    {
+        session()->forget('import_skipped');
+        return response()->json(['ok' => true]);
+    }    
+
 
     // -------------------------------------------------------
     // Build SVG card for Diamond Palace (blue)
