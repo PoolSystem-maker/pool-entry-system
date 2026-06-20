@@ -96,7 +96,7 @@
 </div>
 
 {{-- LOGS GROUPED BY DAY --}}
-@forelse($logs as $date => $dayLogs)
+@forelse(collect($logs)->sortKeysDesc() as $date => $dayLogs)
     <div class="table-wrap" style="margin-bottom:12px;">
 
         {{-- Day header --}}
